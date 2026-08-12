@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.JonlinkProductMapper">
+    
+    <resultMap type="JonlinkProduct" id="JonlinkProductResult">
+        <result property="id"    column="id"    />
+        <result property="productName"    column="product_name"    />
+        <result property="companyId"    column="company_id"    />
+        <result property="companyName"    column="company_name"    />
+        <result property="contactId"    column="contact_id"    />
+        <result property="contactName"    column="contact_name"    />
+        <result property="contactPhone"    column="contact_phone"    />
+        <result property="typeId"    column="type_id"    />
+        <result property="typeName"    column="type_name"    />
+        <result property="upChannel"    column="up_channel"    />
+        <result property="upRate"    column="up_rate"    />
+        <result property="downRate"    column="down_rate"    />
+        <result property="deductTax"    column="deduct_tax"    />
+        <result property="shelfStatus"    column="shelf_status"    />
+        <result property="sort"    column="sort"    />
+        <result property="remark"    column="remark"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectJonlinkProductVo">
+        select id, product_name, company_id, company_name, contact_id, contact_name, contact_phone, type_id, type_name, up_channel, up_rate, down_rate, deduct_tax, shelf_status, sort, remark, create_by, create_time, update_by, update_time from jonlink_product
+    </sql>
+
+    <select id="selectJonlinkProductList" parameterType="JonlinkProduct" resultMap="JonlinkProductResult">
+        <include refid="selectJonlinkProductVo"/>
+        <where>  
+            <if test="productName != null  and productName != ''"> and product_name like concat('%', #{productName}, '%')</if>
+            <if test="typeId != null "> and type_id = #{typeId}</if>
+            <if test="shelfStatus != null  and shelfStatus != ''"> and shelf_status = #{shelfStatus}</if>
+        </where>
+    </select>
+    
+    <select id="selectJonlinkProductById" parameterType="Long" resultMap="JonlinkProductResult">
+        <include refid="selectJonlinkProductVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertJonlinkProduct" parameterType="JonlinkProduct" useGeneratedKeys="true" keyProperty="id">
+        insert into jonlink_product
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="productName != null and productName != ''">product_name,</if>
+            <if test="companyId != null">company_id,</if>
+            <if test="companyName != null">company_name,</if>
+            <if test="contactId != null">contact_id,</if>
+            <if test="contactName != null">contact_name,</if>
+            <if test="contactPhone != null">contact_phone,</if>
+            <if test="typeId != null">type_id,</if>
+            <if test="typeName != null">type_name,</if>
+            <if test="upChannel != null">up_channel,</if>
+            <if test="upRate != null">up_rate,</if>
+            <if test="downRate != null">down_rate,</if>
+            <if test="deductTax != null and deductTax != ''">deduct_tax,</if>
+            <if test="shelfStatus != null and shelfStatus != ''">shelf_status,</if>
+            <if test="sort != null">sort,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="productName != null and productName != ''">#{productName},</if>
+            <if test="companyId != null">#{companyId},</if>
+            <if test="companyName != null">#{companyName},</if>
+            <if test="contactId != null">#{contactId},</if>
+            <if test="contactName != null">#{contactName},</if>
+            <if test="contactPhone != null">#{contactPhone},</if>
+            <if test="typeId != null">#{typeId},</if>
+            <if test="typeName != null">#{typeName},</if>
+            <if test="upChannel != null">#{upChannel},</if>
+            <if test="upRate != null">#{upRate},</if>
+            <if test="downRate != null">#{downRate},</if>
+            <if test="deductTax != null and deductTax != ''">#{deductTax},</if>
+            <if test="shelfStatus != null and shelfStatus != ''">#{shelfStatus},</if>
+            <if test="sort != null">#{sort},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateJonlinkProduct" parameterType="JonlinkProduct">
+        update jonlink_product
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="productName != null and productName != ''">product_name = #{productName},</if>
+            <if test="companyId != null">company_id = #{companyId},</if>
+            <if test="companyName != null">company_name = #{companyName},</if>
+            <if test="contactId != null">contact_id = #{contactId},</if>
+            <if test="contactName != null">contact_name = #{contactName},</if>
+            <if test="contactPhone != null">contact_phone = #{contactPhone},</if>
+            <if test="typeId != null">type_id = #{typeId},</if>
+            <if test="typeName != null">type_name = #{typeName},</if>
+            <if test="upChannel != null">up_channel = #{upChannel},</if>
+            <if test="upRate != null">up_rate = #{upRate},</if>
+            <if test="downRate != null">down_rate = #{downRate},</if>
+            <if test="deductTax != null and deductTax != ''">deduct_tax = #{deductTax},</if>
+            <if test="shelfStatus != null and shelfStatus != ''">shelf_status = #{shelfStatus},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteJonlinkProductById" parameterType="Long">
+        delete from jonlink_product where id = #{id}
+    </delete>
+
+    <delete id="deleteJonlinkProductByIds" parameterType="String">
+        delete from jonlink_product where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

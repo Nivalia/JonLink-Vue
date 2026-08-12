@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.WxDistMemberMapper">
+    
+    <resultMap type="WxDistMember" id="WxDistMemberResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="userName"    column="user_name"    />
+        <result property="parentId"    column="parent_id"    />
+        <result property="depth"    column="depth"    />
+        <result property="accumPoints"    column="accum_points"    />
+        <result property="status"    column="status"    />
+        <result property="joinTime"    column="join_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectWxDistMemberVo">
+        select id, user_id, user_name, parent_id, depth, accum_points, status, join_time, create_by, create_time, update_by, update_time, remark from wx_dist_member
+    </sql>
+
+    <select id="selectWxDistMemberList" parameterType="WxDistMember" resultMap="WxDistMemberResult">
+        <include refid="selectWxDistMemberVo"/>
+        <where>  
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="depth != null "> and depth = #{depth}</if>
+        </where>
+    </select>
+    
+    <select id="selectWxDistMemberById" parameterType="Long" resultMap="WxDistMemberResult">
+        <include refid="selectWxDistMemberVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertWxDistMember" parameterType="WxDistMember" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_dist_member
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="userName != null">user_name,</if>
+            <if test="parentId != null">parent_id,</if>
+            <if test="depth != null">depth,</if>
+            <if test="accumPoints != null">accum_points,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="joinTime != null">join_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="userName != null">#{userName},</if>
+            <if test="parentId != null">#{parentId},</if>
+            <if test="depth != null">#{depth},</if>
+            <if test="accumPoints != null">#{accumPoints},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="joinTime != null">#{joinTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWxDistMember" parameterType="WxDistMember">
+        update wx_dist_member
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="userName != null">user_name = #{userName},</if>
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="depth != null">depth = #{depth},</if>
+            <if test="accumPoints != null">accum_points = #{accumPoints},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="joinTime != null">join_time = #{joinTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteWxDistMemberById" parameterType="Long">
+        delete from wx_dist_member where id = #{id}
+    </delete>
+
+    <delete id="deleteWxDistMemberByIds" parameterType="String">
+        delete from wx_dist_member where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

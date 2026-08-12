@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.WxBizMapper">
+
+    <resultMap type="WxMpUser" id="WxMpUserResult">
+        <result property="id" column="id"/><result property="openid" column="openid"/>
+        <result property="phone" column="phone"/><result property="nickname" column="nickname"/>
+        <result property="subscribe" column="subscribe"/><result property="subscribeTime" column="subscribe_time"/>
+        <result property="unsubscribeTime" column="unsubscribe_time"/>
+        <result property="distributorId" column="distributor_id"/><result property="bindTime" column="bind_time"/>
+        <result property="bindSource" column="bind_source"/><result property="userId" column="user_id"/>
+    </resultMap>
+
+    <resultMap type="WxBizOrder" id="WxBizOrderResult">
+        <result property="id" column="id"/><result property="orderNo" column="order_no"/>
+        <result property="phone" column="phone"/><result property="customerName" column="customer_name"/>
+        <result property="carNo" column="car_no"/><result property="amount" column="amount"/>
+        <result property="status" column="status"/><result property="verifyStatus" column="verify_status"/>
+        <result property="verifyTime" column="verify_time"/><result property="verifyMsg" column="verify_msg"/>
+    </resultMap>
+
+    <resultMap type="WxDistMember" id="WxDistMemberResult">
+        <result property="id" column="id"/><result property="userId" column="user_id"/>
+        <result property="userName" column="user_name"/><result property="parentId" column="parent_id"/>
+        <result property="depth" column="depth"/><result property="accumPoints" column="accum_points"/>
+        <result property="status" column="status"/><result property="joinTime" column="join_time"/>
+    </resultMap>
+
+    <resultMap type="WxQrScene" id="WxQrSceneResult">
+        <result property="id" column="id"/><result property="sceneId" column="scene_id"/>
+        <result property="userId" column="user_id"/><result property="userName" column="user_name"/>
+        <result property="qrType" column="qr_type"/><result property="ticket" column="ticket"/>
+        <result property="qrUrl" column="qr_url"/><result property="status" column="status"/>
+        <result property="bizType" column="biz_type"/><result property="sceneStr" column="scene_str"/>
+        <result property="expireTime" column="expire_time"/><result property="landingUrl" column="landing_url"/>
+    </resultMap>
+
+    <resultMap type="WxMpTemplate" id="WxMpTemplateResult">
+        <result property="id" column="id"/><result property="templateId" column="template_id"/>
+        <result property="templateIdShort" column="template_id_short"/><result property="title" column="title"/>
+        <result property="content" column="content"/><result property="keywordOrder" column="keyword_order"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+    <resultMap type="WxLedgerItem" id="WxLedgerItemResult">
+        <result property="id" column="id"/><result property="ledgerNo" column="ledger_no"/>
+        <result property="ledgerType" column="ledger_type"/><result property="bizNo" column="biz_no"/>
+        <result property="phone" column="phone"/><result property="openid" column="openid"/>
+        <result property="amount" column="amount"/><result property="points" column="points"/>
+        <result property="direction" column="direction"/><result property="bizUser" column="biz_user"/>
+        <result property="status" column="status"/><result property="occurredTime" column="occurred_time"/>
+    </resultMap>
+
+    <resultMap type="WxDistCommission" id="WxDistCommissionResult">
+        <result property="id" column="id"/><result property="orderNo" column="order_no"/>
+        <result property="customerPhone" column="customer_phone"/><result property="customerOpenid" column="customer_openid"/>
+        <result property="beneficiaryId" column="beneficiary_id"/><result property="beneficiaryName" column="beneficiary_name"/>
+        <result property="commissionAmt" column="commission_amt"/><result property="ratio" column="ratio"/>
+        <result property="points" column="points"/><result property="status" column="status"/>
+    </resultMap>
+
+    <resultMap type="JonlinkProduct" id="JonlinkProductResult">
+        <result property="id" column="id"/><result property="productName" column="product_name"/>
+        <result property="companyId" column="company_id"/><result property="companyName" column="company_name"/>
+        <result property="contactId" column="contact_id"/><result property="contactName" column="contact_name"/>
+        <result property="contactPhone" column="contact_phone"/><result property="typeId" column="type_id"/>
+        <result property="typeName" column="type_name"/><result property="upChannel" column="up_channel"/>
+        <result property="upRate" column="up_rate"/><result property="downRate" column="down_rate"/>
+        <result property="deductTax" column="deduct_tax"/><result property="shelfStatus" column="shelf_status"/>
+    </resultMap>
+
+    <resultMap type="JonlinkSettleRecord" id="JonlinkSettleRecordResult">
+        <result property="id" column="id"/><result property="settleNo" column="settle_no"/>
+        <result property="direction" column="direction"/><result property="ledgerId" column="ledger_id"/>
+        <result property="policyNo" column="policy_no"/><result property="amount" column="amount"/>
+        <result property="settleStatus" column="settle_status"/><result property="opUser" column="op_user"/>
+        <result property="settleDate" column="settle_date"/>
+    </resultMap>
+
+    <select id="selectUserByOpenid" parameterType="String" resultMap="WxMpUserResult">
+        select id, openid, phone, nickname, subscribe, subscribe_time, unsubscribe_time,
+               distributor_id, bind_time, bind_source, user_id
+        from wx_mp_user where openid = #{openid} limit 1
+    </select>
+
+    <select id="selectUserByPhone" parameterType="String" resultMap="WxMpUserResult">
+        select id, openid, phone, nickname, subscribe, subscribe_time, unsubscribe_time,
+               distributor_id, bind_time, bind_source, user_id
+        from wx_mp_user where phone = #{phone} limit 1
+    </select>
+
+    <update id="updateUserSubscribe" parameterType="WxMpUser">
+        update wx_mp_user
+        <set>
+            <if test="subscribe != null">subscribe = #{subscribe},</if>
+            <if test="subscribeTime != null">subscribe_time = #{subscribeTime},</if>
+            <if test="unsubscribeTime != null">unsubscribe_time = #{unsubscribeTime},</if>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <update id="updateUserPhone">
+        update wx_mp_user set phone = #{phone} where id = #{id}
+    </update>
+
+    <select id="selectOrderByNo" parameterType="String" resultMap="WxBizOrderResult">
+        select id, order_no, phone, customer_name, car_no, amount, status, verify_status, verify_time, verify_msg
+        from wx_biz_order where order_no = #{orderNo} limit 1
+    </select>
+
+    <select id="countMsgTodayByPhone" resultType="int">
+        select count(*) from wx_mp_template_msg
+        where phone = #{phone} and status = '1' and date(send_time) = #{date}
+    </select>
+
+    <select id="countMsgByStatus" parameterType="String" resultType="int">
+        select count(*) from wx_mp_template_msg where status = #{status}
+    </select>
+
+    <select id="selectMsgByBizId" parameterType="String" resultType="WxMpTemplateMsg">
+        select * from wx_mp_template_msg where biz_id = #{bizId} limit 1
+    </select>
+
+    <select id="selectMsgByMsgId" parameterType="String" resultType="WxMpTemplateMsg">
+        select * from wx_mp_template_msg where msg_id = #{msgId} limit 1
+    </select>
+
+    <select id="selectMsgForCatchUp" resultType="WxMpTemplateMsg">
+        select * from wx_mp_template_msg
+        where status = #{status} and date(create_time) &lt; curdate()
+        order by id asc limit #{limit}
+    </select>
+
+    <select id="selectQrBySceneId" parameterType="Integer" resultMap="WxQrSceneResult">
+        select * from wx_qr_scene where scene_id = #{sceneId} limit 1
+    </select>
+
+    <select id="selectQrBySceneStr" parameterType="String" resultMap="WxQrSceneResult">
+        select * from wx_qr_scene where scene_str = #{sceneStr} limit 1
+    </select>
+
+    <select id="selectDistByUserId" parameterType="Long" resultMap="WxDistMemberResult">
+        select * from wx_dist_member where user_id = #{userId} limit 1
+    </select>
+
+    <select id="selectTemplateByTplId" parameterType="String" resultMap="WxMpTemplateResult">
+        select * from wx_mp_template where template_id = #{templateId} limit 1
+    </select>
+
+    <select id="selectLedgerByBizNoType" resultMap="WxLedgerItemResult">
+        select * from wx_ledger_item where biz_no = #{bizNo} and ledger_type = #{ledgerType} limit 1
+    </select>
+
+    <insert id="insertDistCommission" parameterType="WxDistCommission" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_dist_commission (order_no, customer_phone, customer_openid, beneficiary_id, beneficiary_name,
+            commission_amt, ratio, points, status, create_by, create_time)
+        values (#{orderNo}, #{customerPhone}, #{customerOpenid}, #{beneficiaryId}, #{beneficiaryName},
+            #{commissionAmt}, #{ratio}, #{points}, #{status}, 'SYSTEM', sysdate())
+    </insert>
+
+    <insert id="insertLedgerItem" parameterType="WxLedgerItem" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_ledger_item (ledger_no, ledger_type, biz_no, phone, openid, amount, points, direction,
+            biz_user, status, occurred_time, create_by, create_time, remark)
+        values (#{ledgerNo}, #{ledgerType}, #{bizNo}, #{phone}, #{openid}, #{amount}, #{points}, #{direction},
+            #{bizUser}, #{status}, #{occurredTime}, 'SYSTEM', sysdate(), #{remark})
+    </insert>
+
+    <insert id="insertScanLog" parameterType="WxQrScanLog" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_qr_scan_log (scene_id, biz_type, scene_str, openid, is_new_follow, scan_time)
+        values (#{sceneId}, #{bizType}, #{sceneStr}, #{openid}, #{isNewFollow}, #{scanTime})
+    </insert>
+
+    <select id="selectProductJoin" parameterType="Long" resultMap="JonlinkProductResult">
+        select p.*, c.company_name, ct.contact_name, ct.phone as contact_phone, t.type_name
+        from jonlink_product p
+        left join jonlink_insurance_company c on p.company_id = c.id
+        left join jonlink_contact_person ct on p.contact_id = ct.id
+        left join jonlink_insurance_type t on p.type_id = t.id
+        where p.id = #{id}
+    </select>
+
+    <select id="selectLedgerJoin" parameterType="map" resultType="map">
+        select l.*, p.deduct_tax as product_deduct_tax, p.up_channel as product_up_channel
+        from jonlink_insurance_ledger l
+        left join jonlink_product p on l.product_id = p.id
+        <where>
+            <if test="policyNo != null and policyNo != ''">and l.policy_no like concat('%', #{policyNo}, '%')</if>
+            <if test="channelName != null and channelName != ''">and l.channel_name like concat('%', #{channelName}, '%')</if>
+            <if test="applicant != null and applicant != ''">and l.applicant like concat('%', #{applicant}, '%')</if>
+            <if test="upSettleStatus != null and upSettleStatus != ''">and l.up_settle_status = #{upSettleStatus}</if>
+            <if test="downSettleStatus != null and downSettleStatus != ''">and l.down_settle_status = #{downSettleStatus}</if>
+            <if test="beginTime != null and beginTime != ''">and l.ledger_date &gt;= #{beginTime}</if>
+            <if test="endTime != null and endTime != ''">and l.ledger_date &lt;= #{endTime}</if>
+        </where>
+        order by l.id desc
+    </select>
+
+    <select id="selectSettleByDirectionLedger" resultMap="JonlinkSettleRecordResult">
+        select * from jonlink_settle_record where direction = #{direction} and ledger_id = #{ledgerId} limit 1
+    </select>
+
+    <select id="dashboardStat" parameterType="map" resultType="map">
+        select
+            (select count(*) from wx_mp_user) as fans,
+            (select count(*) from wx_mp_user where subscribe = '1') as fans_active,
+            (select count(*) from wx_biz_order) as orders,
+            (select count(*) from wx_biz_order where verify_status = '1') as verified,
+            (select ifnull(sum(amount),0) from wx_biz_order where verify_status = '1') as verified_amount,
+            (select count(*) from wx_ledger_item where ledger_type = '1') as ledger_verify,
+            (select ifnull(sum(points),0) from wx_ledger_item where ledger_type = '2') as dist_points,
+            (select count(*) from wx_mp_template_msg where status = '1') as msg_sent,
+            (select count(*) from wx_mp_template_msg where status = '2') as msg_failed,
+            (select ifnull(sum(premium),0) from jonlink_insurance_ledger) as ledger_premium,
+            (select ifnull(sum(profit),0) from jonlink_insurance_ledger) as ledger_profit,
+            (select count(*) from jonlink_insurance_ledger) as ledger_count,
+            (select count(*) from jonlink_insurance_ledger where up_settle_status = '1') as ledger_up_settled,
+            (select count(*) from jonlink_insurance_ledger where down_settle_status = '1') as ledger_down_settled
+        from dual
+    </select>
+
+    <select id="dashboardOrderTrend" parameterType="int" resultType="map">
+        select date(verify_time) as d, count(*) as cnt, ifnull(sum(amount),0) as amt
+        from wx_biz_order
+        where verify_status = '1' and verify_time &gt;= date_sub(curdate(), interval #{days} day)
+        group by date(verify_time) order by d asc
+    </select>
+
+    <select id="dashboardMapData" resultType="map">
+        select ${column} as name, count(*) as value
+        from ${table}
+        where ${column} is not null and ${column} != ''
+        group by ${column}
+    </select>
+
+    <select id="dashboardLedgerByDate" parameterType="int" resultType="map">
+        select ledger_date as d, count(*) as cnt, ifnull(sum(premium),0) as premium, ifnull(sum(profit),0) as profit
+        from jonlink_insurance_ledger
+        where ledger_date &gt;= date_sub(curdate(), interval #{days} day)
+        group by ledger_date order by d asc
+    </select>
+
+    <select id="summaryGroupByType" parameterType="String" resultType="map">
+        select ledger_type as type, count(*) as cnt, ifnull(sum(amount),0) as amt
+        from wx_ledger_item
+        where date(occurred_time) = #{date}
+        group by ledger_type
+    </select>
+
+    <insert id="upsertLedgerSummary">
+        insert into wx_ledger_summary (stat_date, ledger_type, total_count, total_amount, create_time)
+        values (#{ledgerDate}, #{ledgerType}, #{count}, #{amount}, sysdate())
+        on duplicate key update total_count = values(total_count), total_amount = values(total_amount), update_time = sysdate()
+    </insert>
+
+    <update id="updateLedgerSettle">
+        update jonlink_insurance_ledger
+        <set>
+            <choose>
+                <when test='direction == "0"'>up_settle_status = #{status}, up_settle_no = #{settleNo}</when>
+                <otherwise>down_settle_status = #{status}, down_settle_no = #{settleNo}</otherwise>
+            </choose>
+        </set>
+        where id = #{id}
+    </update>
+
+    <update id="updateOrderSettled" parameterType="Long">
+        update wx_biz_order set status = '1', update_time = sysdate() where id = #{id}
+    </update>
+
+    <update id="updateOrderVerify" parameterType="WxBizOrder">
+        update wx_biz_order set verify_status = #{verifyStatus}, verify_time = #{verifyTime},
+            verify_msg = #{verifyMsg}, update_time = sysdate() where id = #{id}
+    </update>
+
+    <update id="updateUserDistributor">
+        update wx_mp_user set distributor_id = #{distributorId}, bind_time = #{bindTime}, bind_source = #{bindSource}
+        where id = #{id}
+    </update>
+
+    <select id="selectDistChildren" parameterType="Long" resultMap="WxDistMemberResult">
+        select * from wx_dist_member where parent_id = #{parentId}
+    </select>
+
+    <update id="addDistPoints">
+        update wx_dist_member set accum_points = accum_points + #{points}, update_time = sysdate()
+        where user_id = #{userId}
+    </update>
+
+    <delete id="deleteAllTemplate">
+        delete from wx_mp_template
+    </delete>
+
+    <insert id="insertTemplate" parameterType="WxMpTemplate" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_mp_template (template_id, template_id_short, title, content, keyword_order,
+            primary_industry, deputy_industry, example, status, create_by, create_time, remark)
+        values (#{templateId}, #{templateIdShort}, #{title}, #{content}, #{keywordOrder},
+            #{primaryIndustry}, #{deputyIndustry}, #{example}, #{status}, 'SYSTEM', sysdate(), #{remark})
+    </insert>
+
+
+    <!-- ============ 公众号数据大屏 ============ -->
+    <select id="dashboardMpStat" resultType="map">
+        select
+            (select count(*) from wx_mp_user) as fans,
+            (select count(*) from wx_mp_user where subscribe = '1') as fans_active,
+            (select count(*) from wx_mp_user where date(subscribe_time) = curdate()) as fans_today,
+            (select count(*) from wx_mp_user where subscribe_time &gt;= date_sub(curdate(), interval 1 month)) as fans_month,
+            (select count(*) from wx_biz_order where verify_status = '1' and date(verify_time) = curdate()) as verify_today,
+            (select ifnull(sum(amount),0) from wx_biz_order where verify_status = '1' and date(verify_time) = curdate()) as verify_amount_today,
+            (select ifnull(sum(points),0) from wx_ledger_item where ledger_type = '2' and date(occurred_time) = curdate()) as points_today,
+            (select count(*) from wx_mp_template_msg where date(send_time) = curdate()) as msg_today,
+            (select count(*) from wx_mp_template_msg where status = '2' and date(send_time) = curdate()) as msg_failed_today,
+            (select count(*) from wx_mp_template_msg where status = '0' and date(create_time) = curdate()) as msg_pending_today,
+            (select count(*) from wx_mp_template_msg where status = '1') as msg_sent_total,
+            (select count(*) from wx_mp_template_msg where status = '2') as msg_failed_total,
+            (select ifnull(sum(amount),0) from wx_biz_order where verify_status = '1' and verify_time &gt;= date_sub(curdate(), interval 1 month)) as verify_amount_month,
+            (select ifnull(sum(points),0) from wx_ledger_item where ledger_type = '2') as points_total,
+            (select count(*) from wx_qr_scan_log where date(scan_time) = curdate()) as scan_today,
+            (select count(*) from wx_qr_scan_log) as scan_total,
+            (select ifnull(sum(profit),0) from jonlink_insurance_ledger where ledger_date &gt;= date_sub(curdate(), interval 1 month)) as profit_month
+        from dual
+    </select>
+
+    <select id="dashboardFlowTrend" parameterType="int" resultType="map">
+        select date(occurred_time) as d,
+               count(*) as cnt,
+               ifnull(sum(case when direction = '0' then amount else 0 end),0) as amt_in,
+               ifnull(sum(case when direction = '1' then amount else 0 end),0) as amt_out,
+               ifnull(sum(points),0) as pts
+        from wx_ledger_item
+        where occurred_time &gt;= date_sub(curdate(), interval #{days} day)
+        group by date(occurred_time) order by d asc
+    </select>
+
+    <select id="dashboardTypeDist" resultType="map">
+        select ledger_type as type, count(*) as cnt, ifnull(sum(amount),0) as amt
+        from wx_ledger_item
+        group by ledger_type order by cnt desc
+    </select>
+
+    <select id="dashboardRecentFlows" parameterType="int" resultType="map">
+        select ledger_no, ledger_type as type, phone, openid, amount, points, direction,
+               status, date_format(occurred_time,'%Y-%m-%d %H:%i:%s') as occurred_time, biz_user, remark
+        from wx_ledger_item
+        order by id desc limit #{limit}
+    </select>
+
+    <select id="dashboardScanLogs" parameterType="int" resultType="map">
+        select s.id, s.scene_id, s.biz_type, s.scene_str, s.openid, s.is_new_follow,
+               date_format(s.scan_time,'%Y-%m-%d %H:%i') as scan_time,
+               ifnull(u.nickname, concat('粉丝', right(s.openid, 4))) as nickname,
+               ifnull(u.city, '未知') as city
+        from wx_qr_scan_log s
+        left join wx_mp_user u on u.openid = s.openid
+        order by s.id desc limit #{limit}
+    </select>
+
+    <select id="dashboardTodos" resultType="map">
+        select
+            (select count(*) from wx_mp_template_msg where status = '2' and date(send_time) = curdate()) as push_failed_today,
+            (select count(*) from wx_mp_template_msg where status = '0') as push_pending,
+            (select count(*) from wx_mp_template_msg where status = '0' and date(create_time) &lt; date_sub(curdate(), interval 1 day)) as push_expired,
+            (select count(*) from jonlink_insurance_ledger where up_settle_status = '0') as settle_up_pending,
+            (select count(*) from jonlink_insurance_ledger where down_settle_status = '0') as settle_down_pending,
+            (select count(*) from wx_biz_order where verify_status = '0') as order_unverified,
+            (select count(*) from wx_qr_scan_log where scan_time &gt;= date_sub(now(), interval 24 hour)) as scan_24h
+        from dual
+    </select>
+
+    <select id="dashboardTopDistrict" parameterType="int" resultType="map">
+        select ifnull(city, '未知') as name, count(*) as cnt
+        from wx_mp_user
+        where city is not null and city != ''
+        group by city
+        order by cnt desc
+        limit #{limit}
+    </select>
+
+    <select id="dashboardNotice" parameterType="int" resultType="map">
+        select notice_id as id, notice_title as title, notice_type as type,
+               date_format(create_time,'%Y-%m-%d %H:%i') as create_time
+        from sys_notice
+        where status = '0'
+        order by notice_id desc
+        limit #{limit}
+    </select>
+
+    <!-- ============ H5 粉丝端订单看板 ============ -->
+    <select id="h5OrderStats" parameterType="String" resultType="map">
+        select
+            (select count(*) from wx_biz_order o where o.phone = (select u.phone from wx_mp_user u where u.openid = #{openid})) as total_orders,
+            (select ifnull(sum(o.amount),0) from wx_biz_order o where o.phone = (select u.phone from wx_mp_user u where u.openid = #{openid})) as total_amount,
+            (select count(*) from wx_biz_order o where o.phone = (select u.phone from wx_mp_user u where u.openid = #{openid}) and o.status = '0' and o.verify_status = '0') as pending,
+            (select count(*) from wx_biz_order o where o.phone = (select u.phone from wx_mp_user u where u.openid = #{openid}) and o.verify_status = '1') as done,
+            (select count(*) from wx_biz_order o where o.phone = (select u.phone from wx_mp_user u where u.openid = #{openid}) and date(o.create_time) &gt;= date_sub(curdate(), interval 1 month)) as month_orders,
+            (select ifnull(sum(o.amount),0) from wx_biz_order o where o.phone = (select u.phone from wx_mp_user u where u.openid = #{openid}) and o.create_time &gt;= date_sub(curdate(), interval 1 month)) as month_amount
+        from dual
+    </select>
+
+    <select id="h5OrderTrend" resultType="map">
+        select date(o.create_time) as d, count(*) as cnt, ifnull(sum(o.amount),0) as amt
+        from wx_biz_order o
+        where o.phone = (select u.phone from wx_mp_user u where u.openid = #{openid})
+          and o.create_time &gt;= date_sub(curdate(), interval #{days} day)
+        group by date(o.create_time) order by d asc
+    </select>
+
+    <select id="h5OrderStatusDist" parameterType="String" resultType="map">
+        select o.status as status, count(*) as cnt
+        from wx_biz_order o
+        where o.phone = (select u.phone from wx_mp_user u where u.openid = #{openid})
+        group by o.status
+    </select>
+
+    <select id="h5RecentOrders" resultType="map">
+        select order_no, customer_name, service_type, car_no, amount, status, verify_status,
+               date_format(create_time,'%Y-%m-%d %H:%i:%s') as create_time
+        from wx_biz_order
+        where phone = (select u.phone from wx_mp_user u where u.openid = #{openid})
+        order by id desc limit #{limit}
+    </select>
+
+    <select id="h5Reminders" resultType="map">
+        select id, biz_type, status, url,
+               date_format(send_time,'%Y-%m-%d %H:%i:%s') as send_time,
+               substring(replace(replace(keywords,'\n',' '),'"',''),1,80) as content
+        from wx_mp_template_msg
+        where openid = #{openid}
+        order by id desc limit #{limit}
+    </select>
+
+    <select id="h5FanInfo" parameterType="String" resultType="map">
+        select openid, phone, nickname, avatar, sex, city, activity_level, remark,
+               date_format(subscribe_time,'%Y-%m-%d') as subscribe_date
+        from wx_mp_user
+        where openid = #{openid} limit 1
+    </select>
+</mapper>

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.JonlinkSettleRecordMapper">
+    
+    <resultMap type="JonlinkSettleRecord" id="JonlinkSettleRecordResult">
+        <result property="id"    column="id"    />
+        <result property="settleNo"    column="settle_no"    />
+        <result property="direction"    column="direction"    />
+        <result property="ledgerId"    column="ledger_id"    />
+        <result property="policyNo"    column="policy_no"    />
+        <result property="amount"    column="amount"    />
+        <result property="settleStatus"    column="settle_status"    />
+        <result property="opUser"    column="op_user"    />
+        <result property="settleDate"    column="settle_date"    />
+        <result property="remark"    column="remark"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectJonlinkSettleRecordVo">
+        select id, settle_no, direction, ledger_id, policy_no, amount, settle_status, op_user, settle_date, remark, create_by, create_time, update_by, update_time from jonlink_settle_record
+    </sql>
+
+    <select id="selectJonlinkSettleRecordList" parameterType="JonlinkSettleRecord" resultMap="JonlinkSettleRecordResult">
+        <include refid="selectJonlinkSettleRecordVo"/>
+        <where>  
+            <if test="direction != null  and direction != ''"> and direction = #{direction}</if>
+            <if test="ledgerId != null "> and ledger_id = #{ledgerId}</if>
+            <if test="settleDate != null "> and settle_date = #{settleDate}</if>
+        </where>
+    </select>
+    
+    <select id="selectJonlinkSettleRecordById" parameterType="Long" resultMap="JonlinkSettleRecordResult">
+        <include refid="selectJonlinkSettleRecordVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertJonlinkSettleRecord" parameterType="JonlinkSettleRecord" useGeneratedKeys="true" keyProperty="id">
+        insert into jonlink_settle_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="settleNo != null and settleNo != ''">settle_no,</if>
+            <if test="direction != null and direction != ''">direction,</if>
+            <if test="ledgerId != null">ledger_id,</if>
+            <if test="policyNo != null">policy_no,</if>
+            <if test="amount != null">amount,</if>
+            <if test="settleStatus != null and settleStatus != ''">settle_status,</if>
+            <if test="opUser != null">op_user,</if>
+            <if test="settleDate != null">settle_date,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="settleNo != null and settleNo != ''">#{settleNo},</if>
+            <if test="direction != null and direction != ''">#{direction},</if>
+            <if test="ledgerId != null">#{ledgerId},</if>
+            <if test="policyNo != null">#{policyNo},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="settleStatus != null and settleStatus != ''">#{settleStatus},</if>
+            <if test="opUser != null">#{opUser},</if>
+            <if test="settleDate != null">#{settleDate},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateJonlinkSettleRecord" parameterType="JonlinkSettleRecord">
+        update jonlink_settle_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="settleNo != null and settleNo != ''">settle_no = #{settleNo},</if>
+            <if test="direction != null and direction != ''">direction = #{direction},</if>
+            <if test="ledgerId != null">ledger_id = #{ledgerId},</if>
+            <if test="policyNo != null">policy_no = #{policyNo},</if>
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="settleStatus != null and settleStatus != ''">settle_status = #{settleStatus},</if>
+            <if test="opUser != null">op_user = #{opUser},</if>
+            <if test="settleDate != null">settle_date = #{settleDate},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteJonlinkSettleRecordById" parameterType="Long">
+        delete from jonlink_settle_record where id = #{id}
+    </delete>
+
+    <delete id="deleteJonlinkSettleRecordByIds" parameterType="String">
+        delete from jonlink_settle_record where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.WxMpUserMapper">
+    
+    <resultMap type="WxMpUser" id="WxMpUserResult">
+        <result property="id"    column="id"    />
+        <result property="openid"    column="openid"    />
+        <result property="phone"    column="phone"    />
+        <result property="nickname"    column="nickname"    />
+        <result property="avatar"    column="avatar"    />
+        <result property="sex"    column="sex"    />
+        <result property="country"    column="country"    />
+        <result property="province"    column="province"    />
+        <result property="city"    column="city"    />
+        <result property="subscribe"    column="subscribe"    />
+        <result property="subscribeTime"    column="subscribe_time"    />
+        <result property="unsubscribeTime"    column="unsubscribe_time"    />
+        <result property="lastActivityTime"    column="last_activity_time"    />
+        <result property="activityCount"    column="activity_count"    />
+        <result property="activityLevel"    column="activity_level"    />
+        <result property="userId"    column="user_id"    />
+        <result property="remark"    column="remark"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="distributorId"    column="distributor_id"    />
+        <result property="distributorName"    column="distributor_name"    />
+        <result property="bindTime"    column="bind_time"    />
+        <result property="bindSource"    column="bind_source"    />
+    </resultMap>
+
+    <sql id="selectWxMpUserVo">
+        select u.id, u.openid, u.phone, u.nickname, u.avatar, u.sex, u.country, u.province, u.city, u.subscribe, u.subscribe_time, u.unsubscribe_time, u.last_activity_time, u.activity_count, u.activity_level, u.user_id, u.remark, u.create_by, u.create_time, u.update_by, u.update_time, u.distributor_id, u.bind_time, u.bind_source, d.user_name as distributor_name
+        from wx_mp_user u
+        left join wx_dist_member d on d.user_id = u.distributor_id
+    </sql>
+
+    <select id="selectWxMpUserList" parameterType="WxMpUser" resultMap="WxMpUserResult">
+        <include refid="selectWxMpUserVo"/>
+        <where>  
+            <if test="openid != null  and openid != ''"> and openid = #{openid}</if>
+            <if test="phone != null  and phone != ''"> and phone = #{phone}</if>
+            <if test="nickname != null  and nickname != ''"> and nickname like concat('%', #{nickname}, '%')</if>
+            <if test="subscribeTime != null "> and subscribe_time = #{subscribeTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectWxMpUserById" parameterType="Long" resultMap="WxMpUserResult">
+        <include refid="selectWxMpUserVo"/>
+        where u.id = #{id}
+    </select>
+
+    <insert id="insertWxMpUser" parameterType="WxMpUser" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_mp_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="openid != null and openid != ''">openid,</if>
+            <if test="phone != null and phone != ''">phone,</if>
+            <if test="nickname != null">nickname,</if>
+            <if test="avatar != null">avatar,</if>
+            <if test="sex != null">sex,</if>
+            <if test="country != null">country,</if>
+            <if test="province != null">province,</if>
+            <if test="city != null">city,</if>
+            <if test="subscribe != null and subscribe != ''">subscribe,</if>
+            <if test="subscribeTime != null">subscribe_time,</if>
+            <if test="unsubscribeTime != null">unsubscribe_time,</if>
+            <if test="lastActivityTime != null">last_activity_time,</if>
+            <if test="activityCount != null">activity_count,</if>
+            <if test="activityLevel != null and activityLevel != ''">activity_level,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="distributorId != null">distributor_id,</if>
+            <if test="bindTime != null">bind_time,</if>
+            <if test="bindSource != null">bind_source,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="openid != null and openid != ''">#{openid},</if>
+            <if test="phone != null and phone != ''">#{phone},</if>
+            <if test="nickname != null">#{nickname},</if>
+            <if test="avatar != null">#{avatar},</if>
+            <if test="sex != null">#{sex},</if>
+            <if test="country != null">#{country},</if>
+            <if test="province != null">#{province},</if>
+            <if test="city != null">#{city},</if>
+            <if test="subscribe != null and subscribe != ''">#{subscribe},</if>
+            <if test="subscribeTime != null">#{subscribeTime},</if>
+            <if test="unsubscribeTime != null">#{unsubscribeTime},</if>
+            <if test="lastActivityTime != null">#{lastActivityTime},</if>
+            <if test="activityCount != null">#{activityCount},</if>
+            <if test="activityLevel != null and activityLevel != ''">#{activityLevel},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="distributorId != null">#{distributorId},</if>
+            <if test="bindTime != null">#{bindTime},</if>
+            <if test="bindSource != null">#{bindSource},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWxMpUser" parameterType="WxMpUser">
+        update wx_mp_user
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="openid != null and openid != ''">openid = #{openid},</if>
+            <if test="phone != null and phone != ''">phone = #{phone},</if>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="sex != null">sex = #{sex},</if>
+            <if test="country != null">country = #{country},</if>
+            <if test="province != null">province = #{province},</if>
+            <if test="city != null">city = #{city},</if>
+            <if test="subscribe != null and subscribe != ''">subscribe = #{subscribe},</if>
+            <if test="subscribeTime != null">subscribe_time = #{subscribeTime},</if>
+            <if test="unsubscribeTime != null">unsubscribe_time = #{unsubscribeTime},</if>
+            <if test="lastActivityTime != null">last_activity_time = #{lastActivityTime},</if>
+            <if test="activityCount != null">activity_count = #{activityCount},</if>
+            <if test="activityLevel != null and activityLevel != ''">activity_level = #{activityLevel},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="distributorId != null">distributor_id = #{distributorId},</if>
+            <if test="bindTime != null">bind_time = #{bindTime},</if>
+            <if test="bindSource != null">bind_source = #{bindSource},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteWxMpUserById" parameterType="Long">
+        delete from wx_mp_user where id = #{id}
+    </delete>
+
+    <delete id="deleteWxMpUserByIds" parameterType="String">
+        delete from wx_mp_user where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <insert id="upsertWxMpUser" parameterType="WxMpUser" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_mp_user (openid, phone, nickname, avatar, sex, country, province, city, subscribe,
+            subscribe_time, last_activity_time, activity_count, activity_level, create_by, create_time, update_time)
+        values (#{openid}, #{phone}, #{nickname}, #{avatar}, #{sex}, #{country}, #{province}, #{city},
+            #{subscribe}, #{subscribeTime}, #{lastActivityTime}, #{activityCount}, #{activityLevel}, 'SYSTEM', sysdate(), sysdate())
+        on duplicate key update
+            phone = values(phone), nickname = values(nickname), avatar = values(avatar), sex = values(sex),
+            country = values(country), province = values(province), city = values(city),
+            subscribe = values(subscribe), subscribe_time = values(subscribe_time),
+            last_activity_time = values(last_activity_time), update_time = sysdate()
+    </insert>
+</mapper>

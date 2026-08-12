@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.WxTagMapper">
+
+    <resultMap type="WxTag" id="WxTagResult">
+        <result property="id"    column="id"    />
+        <result property="tagName"    column="tag_name"    />
+        <result property="tagDesc"    column="tag_desc"    />
+        <result property="status"    column="status"    />
+        <result property="sortOrder"    column="sort_order"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectWxTagVo">
+        select id, tag_name, tag_desc, status, sort_order, create_by, create_time, update_by, update_time, remark from wx_tag
+    </sql>
+
+    <select id="selectWxTagList" parameterType="WxTag" resultMap="WxTagResult">
+        <include refid="selectWxTagVo"/>
+        <where>
+            <if test="tagName != null  and tagName != ''"> and tag_name like concat('%', #{tagName}, '%')</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+        order by sort_order asc, id asc
+    </select>
+
+    <select id="selectWxTagById" parameterType="Long" resultMap="WxTagResult">
+        <include refid="selectWxTagVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertWxTag" parameterType="WxTag" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_tag
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="tagName != null and tagName != ''">tag_name,</if>
+            <if test="tagDesc != null">tag_desc,</if>
+            <if test="status != null">status,</if>
+            <if test="sortOrder != null">sort_order,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="tagName != null and tagName != ''">#{tagName},</if>
+            <if test="tagDesc != null">#{tagDesc},</if>
+            <if test="status != null">#{status},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWxTag" parameterType="WxTag">
+        update wx_tag
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="tagName != null and tagName != ''">tag_name = #{tagName},</if>
+            <if test="tagDesc != null">tag_desc = #{tagDesc},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteWxTagById" parameterType="Long">
+        delete from wx_tag where id = #{id}
+    </delete>
+
+    <delete id="deleteWxTagByIds" parameterType="String">
+        delete from wx_tag where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

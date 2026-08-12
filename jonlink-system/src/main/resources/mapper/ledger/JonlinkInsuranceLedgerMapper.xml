@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.JonlinkInsuranceLedgerMapper">
+    
+    <resultMap type="JonlinkInsuranceLedger" id="JonlinkInsuranceLedgerResult">
+        <result property="id"    column="id"    />
+        <result property="ledgerDate"    column="ledger_date"    />
+        <result property="channelType"    column="channel_type"    />
+        <result property="channelRef"    column="channel_ref"    />
+        <result property="channelName"    column="channel_name"    />
+        <result property="policyNo"    column="policy_no"    />
+        <result property="productId"    column="product_id"    />
+        <result property="productName"    column="product_name"    />
+        <result property="insuranceType"    column="insurance_type"    />
+        <result property="insuranceCompany"    column="insurance_company"    />
+        <result property="applicant"    column="applicant"    />
+        <result property="insured"    column="insured"    />
+        <result property="premium"    column="premium"    />
+        <result property="taxFlag"    column="tax_flag"    />
+        <result property="upRate"    column="up_rate"    />
+        <result property="downRate"    column="down_rate"    />
+        <result property="upChannel"    column="up_channel"    />
+        <result property="downCommission"    column="down_commission"    />
+        <result property="upCommission"    column="up_commission"    />
+        <result property="netFee"    column="net_fee"    />
+        <result property="profit"    column="profit"    />
+        <result property="upSettleStatus"    column="up_settle_status"    />
+        <result property="downSettleStatus"    column="down_settle_status"    />
+        <result property="upSettleNo"    column="up_settle_no"    />
+        <result property="downSettleNo"    column="down_settle_no"    />
+        <result property="remark"    column="remark"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectJonlinkInsuranceLedgerVo">
+        select id, ledger_date, channel_type, channel_ref, channel_name, policy_no, product_id, product_name, insurance_type, insurance_company, applicant, insured, premium, tax_flag, up_rate, down_rate, up_channel, down_commission, up_commission, net_fee, profit, up_settle_status, down_settle_status, up_settle_no, down_settle_no, remark, create_by, create_time, update_by, update_time from jonlink_insurance_ledger
+    </sql>
+
+    <select id="selectJonlinkInsuranceLedgerList" parameterType="JonlinkInsuranceLedger" resultMap="JonlinkInsuranceLedgerResult">
+        <include refid="selectJonlinkInsuranceLedgerVo"/>
+        <where>  
+            <if test="ledgerDate != null "> and ledger_date = #{ledgerDate}</if>
+            <if test="channelName != null  and channelName != ''"> and channel_name like concat('%', #{channelName}, '%')</if>
+            <if test="policyNo != null  and policyNo != ''"> and policy_no = #{policyNo}</if>
+            <if test="insuranceType != null  and insuranceType != ''"> and insurance_type = #{insuranceType}</if>
+            <if test="upSettleStatus != null  and upSettleStatus != ''"> and up_settle_status = #{upSettleStatus}</if>
+        </where>
+    </select>
+    
+    <select id="selectJonlinkInsuranceLedgerById" parameterType="Long" resultMap="JonlinkInsuranceLedgerResult">
+        <include refid="selectJonlinkInsuranceLedgerVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertJonlinkInsuranceLedger" parameterType="JonlinkInsuranceLedger" useGeneratedKeys="true" keyProperty="id">
+        insert into jonlink_insurance_ledger
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="ledgerDate != null">ledger_date,</if>
+            <if test="channelType != null and channelType != ''">channel_type,</if>
+            <if test="channelRef != null">channel_ref,</if>
+            <if test="channelName != null and channelName != ''">channel_name,</if>
+            <if test="policyNo != null and policyNo != ''">policy_no,</if>
+            <if test="productId != null">product_id,</if>
+            <if test="productName != null">product_name,</if>
+            <if test="insuranceType != null">insurance_type,</if>
+            <if test="insuranceCompany != null">insurance_company,</if>
+            <if test="applicant != null and applicant != ''">applicant,</if>
+            <if test="insured != null and insured != ''">insured,</if>
+            <if test="premium != null">premium,</if>
+            <if test="taxFlag != null and taxFlag != ''">tax_flag,</if>
+            <if test="upRate != null">up_rate,</if>
+            <if test="downRate != null">down_rate,</if>
+            <if test="upChannel != null">up_channel,</if>
+            <if test="downCommission != null">down_commission,</if>
+            <if test="upCommission != null">up_commission,</if>
+            <if test="netFee != null">net_fee,</if>
+            <if test="profit != null">profit,</if>
+            <if test="upSettleStatus != null and upSettleStatus != ''">up_settle_status,</if>
+            <if test="downSettleStatus != null and downSettleStatus != ''">down_settle_status,</if>
+            <if test="upSettleNo != null">up_settle_no,</if>
+            <if test="downSettleNo != null">down_settle_no,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="ledgerDate != null">#{ledgerDate},</if>
+            <if test="channelType != null and channelType != ''">#{channelType},</if>
+            <if test="channelRef != null">#{channelRef},</if>
+            <if test="channelName != null and channelName != ''">#{channelName},</if>
+            <if test="policyNo != null and policyNo != ''">#{policyNo},</if>
+            <if test="productId != null">#{productId},</if>
+            <if test="productName != null">#{productName},</if>
+            <if test="insuranceType != null">#{insuranceType},</if>
+            <if test="insuranceCompany != null">#{insuranceCompany},</if>
+            <if test="applicant != null and applicant != ''">#{applicant},</if>
+            <if test="insured != null and insured != ''">#{insured},</if>
+            <if test="premium != null">#{premium},</if>
+            <if test="taxFlag != null and taxFlag != ''">#{taxFlag},</if>
+            <if test="upRate != null">#{upRate},</if>
+            <if test="downRate != null">#{downRate},</if>
+            <if test="upChannel != null">#{upChannel},</if>
+            <if test="downCommission != null">#{downCommission},</if>
+            <if test="upCommission != null">#{upCommission},</if>
+            <if test="netFee != null">#{netFee},</if>
+            <if test="profit != null">#{profit},</if>
+            <if test="upSettleStatus != null and upSettleStatus != ''">#{upSettleStatus},</if>
+            <if test="downSettleStatus != null and downSettleStatus != ''">#{downSettleStatus},</if>
+            <if test="upSettleNo != null">#{upSettleNo},</if>
+            <if test="downSettleNo != null">#{downSettleNo},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateJonlinkInsuranceLedger" parameterType="JonlinkInsuranceLedger">
+        update jonlink_insurance_ledger
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="ledgerDate != null">ledger_date = #{ledgerDate},</if>
+            <if test="channelType != null and channelType != ''">channel_type = #{channelType},</if>
+            <if test="channelRef != null">channel_ref = #{channelRef},</if>
+            <if test="channelName != null and channelName != ''">channel_name = #{channelName},</if>
+            <if test="policyNo != null and policyNo != ''">policy_no = #{policyNo},</if>
+            <if test="productId != null">product_id = #{productId},</if>
+            <if test="productName != null">product_name = #{productName},</if>
+            <if test="insuranceType != null">insurance_type = #{insuranceType},</if>
+            <if test="insuranceCompany != null">insurance_company = #{insuranceCompany},</if>
+            <if test="applicant != null and applicant != ''">applicant = #{applicant},</if>
+            <if test="insured != null and insured != ''">insured = #{insured},</if>
+            <if test="premium != null">premium = #{premium},</if>
+            <if test="taxFlag != null and taxFlag != ''">tax_flag = #{taxFlag},</if>
+            <if test="upRate != null">up_rate = #{upRate},</if>
+            <if test="downRate != null">down_rate = #{downRate},</if>
+            <if test="upChannel != null">up_channel = #{upChannel},</if>
+            <if test="downCommission != null">down_commission = #{downCommission},</if>
+            <if test="upCommission != null">up_commission = #{upCommission},</if>
+            <if test="netFee != null">net_fee = #{netFee},</if>
+            <if test="profit != null">profit = #{profit},</if>
+            <if test="upSettleStatus != null and upSettleStatus != ''">up_settle_status = #{upSettleStatus},</if>
+            <if test="downSettleStatus != null and downSettleStatus != ''">down_settle_status = #{downSettleStatus},</if>
+            <if test="upSettleNo != null">up_settle_no = #{upSettleNo},</if>
+            <if test="downSettleNo != null">down_settle_no = #{downSettleNo},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteJonlinkInsuranceLedgerById" parameterType="Long">
+        delete from jonlink_insurance_ledger where id = #{id}
+    </delete>
+
+    <delete id="deleteJonlinkInsuranceLedgerByIds" parameterType="String">
+        delete from jonlink_insurance_ledger where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

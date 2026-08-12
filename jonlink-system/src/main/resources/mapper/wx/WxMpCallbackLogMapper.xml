@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.WxMpCallbackLogMapper">
+
+    <resultMap type="WxMpCallbackLog" id="WxMpCallbackLogResult">
+        <result property="id"    column="id"    />
+        <result property="msgType"    column="msg_type"    />
+        <result property="event"    column="event"    />
+        <result property="fromUser"    column="from_user"    />
+        <result property="toUser"    column="to_user"    />
+        <result property="msgId"    column="msg_id"    />
+        <result property="scene"    column="scene"    />
+        <result property="eventKey"    column="event_key"    />
+        <result property="payload"    column="payload"    />
+        <result property="rawXml"    column="raw_xml"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectWxMpCallbackLogVo">
+        select id, msg_type, event, from_user, to_user, msg_id, scene, event_key, payload, raw_xml, create_time from wx_mp_callback_log
+    </sql>
+
+    <select id="selectWxMpCallbackLogList" parameterType="WxMpCallbackLog" resultMap="WxMpCallbackLogResult">
+        <include refid="selectWxMpCallbackLogVo"/>
+        <where>
+            <if test="msgType != null  and msgType != ''"> and msg_type = #{msgType}</if>
+            <if test="event != null  and event != ''"> and event = #{event}</if>
+            <if test="fromUser != null  and fromUser != ''"> and from_user like concat('%', #{fromUser}, '%')</if>
+            <if test="toUser != null  and toUser != ''"> and to_user = #{toUser}</if>
+            <if test="msgId != null  and msgId != ''"> and msg_id = #{msgId}</if>
+            <if test="params.beginTime != null and params.beginTime != ''"> and create_time &gt;= #{params.beginTime}</if>
+            <if test="params.endTime != null and params.endTime != ''"> and create_time &lt;= #{params.endTime}</if>
+        </where>
+        order by create_time desc, id desc
+    </select>
+
+    <select id="selectWxMpCallbackLogById" parameterType="Long" resultMap="WxMpCallbackLogResult">
+        <include refid="selectWxMpCallbackLogVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertWxMpCallbackLog" parameterType="WxMpCallbackLog" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_mp_callback_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="msgType != null">msg_type,</if>
+            <if test="event != null">event,</if>
+            <if test="fromUser != null">from_user,</if>
+            <if test="toUser != null">to_user,</if>
+            <if test="msgId != null">msg_id,</if>
+            <if test="scene != null">scene,</if>
+            <if test="eventKey != null">event_key,</if>
+            <if test="payload != null">payload,</if>
+            <if test="rawXml != null">raw_xml,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="msgType != null">#{msgType},</if>
+            <if test="event != null">#{event},</if>
+            <if test="fromUser != null">#{fromUser},</if>
+            <if test="toUser != null">#{toUser},</if>
+            <if test="msgId != null">#{msgId},</if>
+            <if test="scene != null">#{scene},</if>
+            <if test="eventKey != null">#{eventKey},</if>
+            <if test="payload != null">#{payload},</if>
+            <if test="rawXml != null">#{rawXml},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <delete id="deleteWxMpCallbackLogById" parameterType="Long">
+        delete from wx_mp_callback_log where id = #{id}
+    </delete>
+
+    <delete id="deleteAllWxMpCallbackLog">
+        delete from wx_mp_callback_log
+    </delete>
+
+</mapper>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的专属看板</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"PingFang SC","Microsoft YaHei",sans-serif; }
+  body { background:#eef1f6; display:flex; justify-content:center; }
+  .phone { width:100%; max-width:430px; min-height:100vh; background:#f4f7fc; padding:0 12px 22px; }
+  .headerbar { display:flex; justify-content:space-between; align-items:center; color:#55627c; font-size:12px; padding:12px 4px 8px; }
+  .hero { background:linear-gradient(135deg,#1e3a5f,#2f6bb3); border-radius:16px; padding:18px; color:#fff; position:relative; overflow:hidden; }
+  .hero::after { content:""; position:absolute; right:-30px; top:-30px; width:110px; height:110px; border-radius:50%; background:rgba(255,255,255,.08); }
+  .hero .avatar { font-size:34px; }
+  .hero .greet { font-size:15px; font-weight:600; margin-top:8px; }
+  .hero .name { font-size:12px; opacity:.85; margin-top:4px; }
+  .hero .hide { font-size:10px; opacity:.65; margin-top:8px; }
+  .stats { display:flex; gap:8px; margin-top:12px; }
+  .stat { flex:1; background:#fff; border-radius:14px; padding:12px 8px; text-align:center; box-shadow:0 2px 12px rgba(20,60,95,.05); }
+  .stat .num { font-size:16px; font-weight:700; color:#1e3a5f; }
+  .stat .lbl { font-size:10px; color:#8a94a6; margin-top:3px; }
+  .stat.blue .num { color:#2b6cb3; } .stat.orange .num { color:#e8873a; } .stat.green .num { color:#2eaa7a; }
+  .summaries { display:flex; gap:8px; margin-top:10px; }
+  .summary { flex:1; background:#fff; border-radius:12px; padding:10px 12px; box-shadow:0 2px 12px rgba(20,60,95,.05); }
+  .summary .t { font-size:10px; color:#8a94a6; }
+  .summary .v { font-size:15px; font-weight:700; color:#1e3a5f; margin-top:3px; }
+  .card { background:#fff; border-radius:14px; padding:14px; margin-top:12px; box-shadow:0 2px 12px rgba(20,60,95,.05); }
+  .card h3 { font-size:13px; color:#1e3a5f; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .chip { display:inline-block; font-size:9px; padding:2px 8px; border-radius:10px; color:#fff; }
+  .chip-blue { background:#2b6cb3; } .chip-orange { background:#e8873a; } .chip-green { background:#2eaa7a; }
+  .bars { display:flex; align-items:flex-end; gap:4px; height:110px; padding-top:6px; }
+  .bar { flex:1; background:linear-gradient(180deg,#4a90d9,#2b6cb3); border-radius:4px 4px 0 0; min-height:6px; position:relative; }
+  .bar span { position:absolute; top:-14px; left:50%; transform:translateX(-50%); font-size:8px; color:#8a94a6; }
+  .legend { font-size:10px; color:#8a94a6; }
+  .legend i { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:4px; vertical-align:middle; }
+  .donut-row { display:flex; align-items:center; gap:14px; }
+  .ring { width:110px; height:110px; border-radius:50%; position:relative; background:#eef1f6; flex-shrink:0; }
+  .ring-inner { position:absolute; inset:16px; background:#fff; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .ring-num { font-size:19px; font-weight:700; color:#1e3a5f; line-height:1; }
+  .ring-unit { font-size:9px; color:#8a94a6; margin-top:3px; }
+  .dlegend { flex:1; }
+  .ditem { display:grid; grid-template-columns:8px 1fr auto; align-items:center; gap:6px; font-size:11px; color:#5a6478; margin-bottom:8px; }
+  .ditem i { width:8px; height:8px; border-radius:3px; }
+  .ditem em { font-style:normal; color:#1e3a5f; font-weight:600; }
+  .mini-bar { grid-column:2/4; height:5px; border-radius:3px; background:#eef1f6; overflow:hidden; margin-top:-2px; }
+  .mb { height:100%; border-radius:3px; }
+  table { width:100%; border-collapse:collapse; font-size:11px; }
+  th { color:#8a94a6; font-weight:500; text-align:left; padding:6px 4px; border-bottom:1px solid #f0f2f7; }
+  td { padding:8px 4px; border-bottom:1px solid #f7f8fb; color:#3c4456; }
+  .st { padding:1px 8px; border-radius:10px; font-size:10px; }
+  .st.ok { background:#e6f6ef; color:#2eaa7a; }
+  .st.doing { background:#eaf2fd; color:#2b6cb3; }
+  .st.wait { background:#fdf0e6; color:#e8873a; }
+  .st.cancel { background:#f0f1f5; color:#98a1b3; }
+  .amount { font-weight:700; color:#1e3a5f; }
+  .map-canvas { border-radius:10px; background:#f4f7fc; position:relative; overflow:hidden; }
+  .map-canvas svg { width:100%; height:auto; display:block; }
+  .map-legend { position:absolute; right:10px; bottom:10px; display:flex; align-items:center; gap:3px; background:rgba(255,255,255,.85); border-radius:8px; padding:4px 8px; font-size:9px; color:#8a94a6; }
+  .map-legend i { width:8px; height:8px; border-radius:2px; }
+  .map-legend i:nth-child(2){ background:#c7dcf5; } .map-legend i:nth-child(3){ background:#8fc2ec; }
+  .map-legend i:nth-child(4){ background:#5da2dc; } .map-legend i:nth-child(5){ background:#2f6bb3; } .map-legend i:nth-child(6){ background:#1e3a5f; }
+  .dist-list { margin-top:10px; }
+  .dist-item { display:flex; align-items:center; gap:8px; font-size:11px; color:#5a6478; margin-bottom:6px; }
+  .dist-item .n { width:64px; flex-shrink:0; }
+  .dist-item .track { flex:1; height:6px; border-radius:3px; background:#eef1f6; overflow:hidden; }
+  .dist-item .fill { height:100%; border-radius:3px; background:linear-gradient(90deg,#8fc2ec,#2f6bb3); }
+  .dist-item .v { width:32px; text-align:right; color:#1e3a5f; font-weight:600; }
+  .footer { text-align:center; font-size:10px; color:#9aa3b5; padding:18px 0 22px; }
+  .demo-banner { display:none; background:#fff7e6; color:#d48806; font-size:11px; padding:8px 10px; border-radius:8px; margin-top:10px; line-height:1.5; }
+  .ext { display:flex; flex-wrap:wrap; gap:8px; }
+  .ext span { background:#f4f7fc; border-radius:8px; padding:6px 10px; font-size:11px; color:#5a6478; }
+  .ext b { color:#1e3a5f; margin-left:4px; font-weight:600; }
+  .err { text-align:center; padding:60px 20px; color:#d9566b; font-size:13px; }
+  .loading { text-align:center; padding:60px 20px; color:#8a94a6; font-size:13px; }
+  .empty { color:#9aa3b5; font-size:11px; text-align:center; padding:14px 0; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="headerbar"><span>JonLink·订单服务</span><span>•••</span></div>
+  <div id="demoBanner" class="demo-banner">⚠ 演示模式：当前展示示例数据，真实数据需通过公众号推送消息链接(ticket)打开</div>
+  <div id="err" class="err" style="display:none">链接已失效，请重新接收消息后打开</div>
+  <div id="main" style="display:none">
+    <div class="hero">
+      <div class="avatar">📊</div>
+      <div class="greet" id="greet">您好，尊敬的客户</div>
+      <div class="name" id="heroName"></div>
+      <div class="hide">▍数据范围：仅本人名下订单 · 已加密防泄漏</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="num" id="sTotal">-</div><div class="lbl">全部订单</div></div>
+      <div class="stat blue"><div class="num" id="sAmount">-</div><div class="lbl">累计消费</div></div>
+      <div class="stat orange"><div class="num" id="sPending">-</div><div class="lbl">待处理</div></div>
+      <div class="stat green"><div class="num" id="sDone">-</div><div class="lbl">已完成</div></div>
+    </div>
+    <div class="summaries">
+      <div class="summary"><div class="t">本月下单</div><div class="v" id="mOrders">-</div></div>
+      <div class="summary"><div class="t">本月消费</div><div class="v" id="mAmount">-</div></div>
+    </div>
+    <div class="card">
+      <h3>近30天订单趋势 <span class="chip chip-blue">按日统计</span></h3>
+      <div class="bars" id="trendBars"></div>
+      <div class="legend" style="margin-top:10px"><i style="background:#2b6cb3"></i>订单数</div>
+    </div>
+    <div class="card">
+      <h3>订单状态分布</h3>
+      <div class="donut-row">
+        <div class="ring" id="ring" style="background:#eef1f6">
+          <div class="ring-inner"><div class="ring-num" id="ringNum">0</div><div class="ring-unit">笔</div></div>
+        </div>
+        <div class="dlegend" id="dlegend"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>服务提醒 <span class="chip chip-orange">推送记录</span></h3>
+      <div id="reminders"><div class="empty">暂无提醒</div></div>
+    </div>
+    <div class="card">
+      <h3>我的专属档案 <span class="chip chip-orange">粉丝档案</span></h3>
+      <div class="ext" id="extList"><div class="empty">暂无档案数据</div></div>
+    </div>
+    <div class="card">
+      <h3>客户分布 <span class="chip chip-blue">本客户数据</span></h3>
+      <div class="map-canvas">
+        <div id="mapSvg"></div>
+        <div class="map-legend"><span>低</span><i></i><i></i><i></i><i></i><i></i><span>高</span></div>
+      </div>
+      <div class="dist-list" id="distList"></div>
+    </div>
+    <div class="card">
+      <h3>最近订单 <span class="chip chip-green">最近5笔</span></h3>
+      <table id="orderTable">
+        <tr><th>订单号</th><th>项目</th><th>金额</th><th>状态</th></tr>
+      </table>
+    </div>
+    <div class="footer">数据仅统计本人名下订单<br>JonLink · 先知智源管理系统</div>
+  </div>
+  <div id="loading" class="loading">加载中…</div>
+</div>
+<script>
+var TICKET = new URLSearchParams(location.search).get('ticket');
+var STATUS_MAP = {'0':'待处理','1':'处理中','2':'已完成','3':'已取消'};
+var STATUS_CLS = {'0':'wait','1':'doing','2':'ok','3':'cancel'};
+
+function maskPhone(p) {
+  if (!p) return '';
+  return p.length >= 7 ? p.slice(0,3) + '****' + p.slice(-4) : p;
+}
+function fmtMoney(v) {
+  v = Number(v) || 0;
+  return '¥ ' + v.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function render(data) {
+  var fan = data.fan || {}, stats = data.stats || {};
+  // hero
+  var hour = new Date().getHours();
+  document.getElementById('greet').textContent = (hour < 6 ? '凌晨好' : hour < 12 ? '上午好' : hour < 18 ? '下午好' : '晚上好') + '，尊敬的客户';
+  document.getElementById('heroName').textContent = (fan.nickname || maskPhone(fan.phone) || '微信用户') + ' 的专属看板';
+  // stats
+  var total = Number(stats.total_orders) || 0;
+  var done = Number(stats.done) || 0;
+  document.getElementById('sTotal').textContent = total;
+  document.getElementById('sAmount').textContent = fmtMoney(stats.total_amount);
+  document.getElementById('sPending').textContent = Number(stats.pending) || 0;
+  document.getElementById('sDone').textContent = done;
+  document.getElementById('mOrders').textContent = (stats.month_orders || 0) + ' 单';
+  document.getElementById('mAmount').textContent = fmtMoney(stats.month_amount);
+  // 专属档案
+  var ext = data.ext || {};
+  var sexMap = {1:'男', 2:'女', 0:'未知'};
+  var extItems = [
+    ['昵称', ext.nickname], ['手机号', maskPhone(ext.phone)], ['性别', sexMap[ext.sex]],
+    ['城市', ext.city], ['活跃等级', ext.level], ['备注', ext.remark]
+  ];
+  var extHtml = '';
+  extItems.forEach(function (kv) {
+    if (kv[1] != null && kv[1] !== '') extHtml += '<span>' + kv[0] + ' <b>' + kv[1] + '</b></span>';
+  });
+  document.getElementById('extList').innerHTML = extHtml || '<div class="empty">暂无档案数据</div>';
+  // trend bars
+  var trend = data.trend || [];
+  var maxC = 1;
+  trend.forEach(function(r) { maxC = Math.max(maxC, Number(r.cnt) || 0); });
+  var barsHtml = '';
+  trend.forEach(function(r) {
+    var h = Math.max(6, Math.round((Number(r.cnt) || 0) / maxC * 100));
+    barsHtml += '<div class="bar" style="height:' + h + '%"><span>' + (Number(r.cnt) || '') + '</span></div>';
+  });
+  document.getElementById('trendBars').innerHTML = barsHtml || '<div class="empty">近30天暂无订单</div>';
+  // status ring
+  var dist = data.statusDist || [];
+  var colors = {'0':'#e8873a','1':'#3b82d6','2':'#2eaa7a','3':'#d9dee8'};
+  var totalCnt = 0;
+  dist.forEach(function(r) { totalCnt += Number(r.cnt) || 0; });
+  document.getElementById('ringNum').textContent = totalCnt;
+  if (totalCnt > 0) {
+    var pctMap = {};
+    var segs = [];
+    dist.forEach(function(r) {
+      var p = Math.round((Number(r.cnt) || 0) / totalCnt * 10000) / 100;
+      pctMap[r.status] = p;
+      segs.push((colors[r.status] || '#ccc') + ' 0 ' + p + '%');
+    });
+    var acc = 0;
+    segs = dist.map(function(r) {
+      var p = pctMap[r.status];
+      var seg = (colors[r.status] || '#ccc') + ' ' + acc + '% ' + (acc + p) + '%';
+      acc += p;
+      return seg;
+    });
+    document.getElementById('ring').style.background = 'conic-gradient(' + segs.join(', ') + ')';
+  }
+  var legHtml = '';
+  dist.forEach(function(r) {
+    var p = totalCnt ? Math.round((Number(r.cnt) || 0) / totalCnt * 1000) / 10 : 0;
+    legHtml += '<div class="ditem"><i style="background:' + (colors[r.status] || '#ccc') + '"></i><span>' + (STATUS_MAP[r.status] || '状态' + r.status) + '</span><em>' + r.cnt + '</em>' +
+      '<div class="mini-bar"><div class="mb" style="width:' + p + '%;background:' + (colors[r.status] || '#ccc') + '"></div></div></div>';
+  });
+  document.getElementById('dlegend').innerHTML = legHtml || '<div class="empty">暂无订单</div>';
+  // reminders
+  var rems = data.reminders || [];
+  var remHtml = '<table><tr><th>时间</th><th>内容</th><th>状态</th></tr>';
+  if (rems.length === 0) remHtml = '<div class="empty">暂无提醒</div>';
+  rems.forEach(function(r) {
+    var st = r.status === '1' ? '<span class="st ok">已送达</span>' : r.status === '2' ? '<span class="st cancel">失败</span>' : '<span class="st wait">待发送</span>';
+    remHtml += '<tr><td>' + (r.send_time || '-') + '</td><td>' + (r.content || (r.biz_type || '服务通知')) + '</td><td>' + st + '</td></tr>';
+  });
+  if (rems.length > 0) remHtml += '</table>';
+  document.getElementById('reminders').innerHTML = remHtml;
+  // recent orders
+  var orders = data.recentOrders || [];
+  var ordHtml = '<tr><th>订单号</th><th>项目</th><th>金额</th><th>状态</th></tr>';
+  if (orders.length === 0) {
+    document.getElementById('orderTable').innerHTML = '<tr><td colspan="4" style="text-align:center;color:#9aa3b5;padding:14px">暂无订单</td></tr>';
+  } else {
+    orders.forEach(function(o) {
+      ordHtml += '<tr><td>' + o.order_no + '</td><td>' + (o.service_type || o.customer_name || '-') + '</td><td class="amount">' + fmtMoney(o.amount) + '</td><td><span class="st ' + (o.verify_status === '1' ? 'ok' : STATUS_CLS[o.status] || 'wait') + '">' + (o.verify_status === '1' ? '已核销' : STATUS_MAP[o.status] || '待处理') + '</span></td></tr>';
+    });
+    document.getElementById('orderTable').innerHTML = ordHtml;
+  }
+  // map + dist
+  loadMap();
+}
+
+function loadMap() {
+  fetch('/h5/api/map').then(function(r) { return r.json(); }).then(function(res) {
+    var rows = res.data || [];
+    var svg = document.getElementById('mapSvg');
+    if (!svg.dataset.svg) {
+      fetch('/h5/sjz-map.svg').then(function(r) { return r.text(); }).then(function(t) {
+        svg.innerHTML = t;
+        svg.dataset.svg = '1';
+        renderDist(rows);
+      }).catch(function() { renderDist(rows); });
+    } else {
+      renderDist(rows);
+    }
+  }).catch(function() {});
+}
+
+function renderDist(rows) {
+  var list = document.getElementById('distList');
+  if (!rows || rows.length === 0) {
+    list.innerHTML = '<div class="empty">暂无地区数据</div>';
+    return;
+  }
+  var maxV = 1;
+  rows.forEach(function(r) { maxV = Math.max(maxV, Number(r.value) || 0); });
+  var html = '';
+  rows.slice(0, 10).forEach(function(r) {
+    var w = Math.round((Number(r.value) || 0) / maxV * 100);
+    html += '<div class="dist-item"><span class="n">' + (r.name || '-') + '</span><div class="track"><div class="fill" style="width:' + w + '%"></div></div><span class="v">' + r.value + '</span></div>';
+  });
+  list.innerHTML = html;
+}
+
+var DEMO = {
+  fan: { nickname: '演示客户', phone: '13800008021' },
+  stats: { total_orders: 26, total_amount: 46280, pending: 3, done: 22, month_orders: 5, month_amount: 3860 },
+  trend: [
+    { cnt: 2 }, { cnt: 3 }, { cnt: 1 }, { cnt: 4 }, { cnt: 3 }, { cnt: 5 },
+    { cnt: 4 }, { cnt: 6 }, { cnt: 5 }, { cnt: 8 }, { cnt: 7 }, { cnt: 9 }
+  ],
+  statusDist: [
+    { status: '2', cnt: 96 }, { status: '1', cnt: 27 }, { status: '0', cnt: 3 }, { status: '3', cnt: 2 }
+  ],
+  reminders: [
+    { send_time: '08-08 09:12', content: '订单待发货提醒', status: '1' },
+    { send_time: '08-07 18:30', content: '服务到期提醒', status: '0' },
+    { send_time: '08-06 11:05', content: '月度账单推送', status: '1' }
+  ],
+  recentOrders: [
+    { order_no: 'JL20260808003', service_type: '设备安装', amount: 1280, status: '0' },
+    { order_no: 'JL20260807056', service_type: '年度服务包', amount: 3980, status: '0' },
+    { order_no: 'JL20260801012', service_type: '配件采购', amount: 456, status: '2' }
+  ],
+  ext: { nickname: '演示客户', phone: '13800008021', sex: 1, city: '石家庄市', level: 3, remark: '演示数据' }
+};
+
+if (!TICKET) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('demoBanner').style.display = 'block';
+  document.getElementById('main').style.display = 'block';
+  render(DEMO);
+} else {
+  fetch('/h5/api/orderDashboard?ticket=' + encodeURIComponent(TICKET))
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      document.getElementById('loading').style.display = 'none';
+      if (res.code !== 200) {
+        document.getElementById('err').style.display = 'block';
+        return;
+      }
+      document.getElementById('main').style.display = 'block';
+      render(res.data);
+    })
+    .catch(function() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('err').style.display = 'block';
+    });
+}
+</script>
+</body>
+</html>

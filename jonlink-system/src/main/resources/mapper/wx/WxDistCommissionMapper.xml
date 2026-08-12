@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.WxDistCommissionMapper">
+    
+    <resultMap type="WxDistCommission" id="WxDistCommissionResult">
+        <result property="id"    column="id"    />
+        <result property="orderNo"    column="order_no"    />
+        <result property="customerPhone"    column="customer_phone"    />
+        <result property="customerOpenid"    column="customer_openid"    />
+        <result property="beneficiaryId"    column="beneficiary_id"    />
+        <result property="beneficiaryName"    column="beneficiary_name"    />
+        <result property="commissionAmt"    column="commission_amt"    />
+        <result property="ratio"    column="ratio"    />
+        <result property="points"    column="points"    />
+        <result property="status"    column="status"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectWxDistCommissionVo">
+        select id, order_no, customer_phone, customer_openid, beneficiary_id, beneficiary_name, commission_amt, ratio, points, status, create_by, create_time, update_by, update_time, remark from wx_dist_commission
+    </sql>
+
+    <select id="selectWxDistCommissionList" parameterType="WxDistCommission" resultMap="WxDistCommissionResult">
+        <include refid="selectWxDistCommissionVo"/>
+        <where>  
+            <if test="orderNo != null  and orderNo != ''"> and order_no = #{orderNo}</if>
+            <if test="createTime != null "> and create_time = #{createTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectWxDistCommissionById" parameterType="Long" resultMap="WxDistCommissionResult">
+        <include refid="selectWxDistCommissionVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertWxDistCommission" parameterType="WxDistCommission" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_dist_commission
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="orderNo != null and orderNo != ''">order_no,</if>
+            <if test="customerPhone != null">customer_phone,</if>
+            <if test="customerOpenid != null">customer_openid,</if>
+            <if test="beneficiaryId != null">beneficiary_id,</if>
+            <if test="beneficiaryName != null">beneficiary_name,</if>
+            <if test="commissionAmt != null">commission_amt,</if>
+            <if test="ratio != null">ratio,</if>
+            <if test="points != null">points,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="orderNo != null and orderNo != ''">#{orderNo},</if>
+            <if test="customerPhone != null">#{customerPhone},</if>
+            <if test="customerOpenid != null">#{customerOpenid},</if>
+            <if test="beneficiaryId != null">#{beneficiaryId},</if>
+            <if test="beneficiaryName != null">#{beneficiaryName},</if>
+            <if test="commissionAmt != null">#{commissionAmt},</if>
+            <if test="ratio != null">#{ratio},</if>
+            <if test="points != null">#{points},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWxDistCommission" parameterType="WxDistCommission">
+        update wx_dist_commission
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="orderNo != null and orderNo != ''">order_no = #{orderNo},</if>
+            <if test="customerPhone != null">customer_phone = #{customerPhone},</if>
+            <if test="customerOpenid != null">customer_openid = #{customerOpenid},</if>
+            <if test="beneficiaryId != null">beneficiary_id = #{beneficiaryId},</if>
+            <if test="beneficiaryName != null">beneficiary_name = #{beneficiaryName},</if>
+            <if test="commissionAmt != null">commission_amt = #{commissionAmt},</if>
+            <if test="ratio != null">ratio = #{ratio},</if>
+            <if test="points != null">points = #{points},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteWxDistCommissionById" parameterType="Long">
+        delete from wx_dist_commission where id = #{id}
+    </delete>
+
+    <delete id="deleteWxDistCommissionByIds" parameterType="String">
+        delete from wx_dist_commission where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

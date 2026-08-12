@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.WxH5PageMapper">
+
+    <resultMap type="WxH5Page" id="WxH5PageResult">
+        <result property="id"    column="id"    />
+        <result property="pageCode"    column="page_code"    />
+        <result property="pageName"    column="page_name"    />
+        <result property="pagePath"    column="page_path"    />
+        <result property="pageDesc"    column="page_desc"    />
+        <result property="status"    column="status"    />
+        <result property="sortOrder"    column="sort_order"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectWxH5PageVo">
+        select id, page_code, page_name, page_path, page_desc, status, sort_order, create_by, create_time, update_by, update_time, remark from wx_h5_page
+    </sql>
+
+    <select id="selectWxH5PageList" parameterType="WxH5Page" resultMap="WxH5PageResult">
+        <include refid="selectWxH5PageVo"/>
+        <where>
+            <if test="pageCode != null  and pageCode != ''"> and page_code like concat('%', #{pageCode}, '%')</if>
+            <if test="pageName != null  and pageName != ''"> and page_name like concat('%', #{pageName}, '%')</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+        order by sort_order asc, id asc
+    </select>
+
+    <select id="selectWxH5PageById" parameterType="Long" resultMap="WxH5PageResult">
+        <include refid="selectWxH5PageVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertWxH5Page" parameterType="WxH5Page" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_h5_page
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="pageCode != null">page_code,</if>
+            <if test="pageName != null">page_name,</if>
+            <if test="pagePath != null">page_path,</if>
+            <if test="pageDesc != null">page_desc,</if>
+            <if test="status != null">status,</if>
+            <if test="sortOrder != null">sort_order,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="pageCode != null">#{pageCode},</if>
+            <if test="pageName != null">#{pageName},</if>
+            <if test="pagePath != null">#{pagePath},</if>
+            <if test="pageDesc != null">#{pageDesc},</if>
+            <if test="status != null">#{status},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateWxH5Page" parameterType="WxH5Page">
+        update wx_h5_page
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="pageCode != null">page_code = #{pageCode},</if>
+            <if test="pageName != null">page_name = #{pageName},</if>
+            <if test="pagePath != null">page_path = #{pagePath},</if>
+            <if test="pageDesc != null">page_desc = #{pageDesc},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteWxH5PageById" parameterType="Long">
+        delete from wx_h5_page where id = #{id}
+    </delete>
+
+    <delete id="deleteWxH5PageByIds" parameterType="String">
+        delete from wx_h5_page where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

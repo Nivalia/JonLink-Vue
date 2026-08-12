@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.WxLedgerSummaryMapper">
+    
+    <resultMap type="WxLedgerSummary" id="WxLedgerSummaryResult">
+        <result property="id"    column="id"    />
+        <result property="statDate"    column="stat_date"    />
+        <result property="ledgerType"    column="ledger_type"    />
+        <result property="totalCount"    column="total_count"    />
+        <result property="totalAmount"    column="total_amount"    />
+        <result property="totalPoints"    column="total_points"    />
+    </resultMap>
+
+    <sql id="selectWxLedgerSummaryVo">
+        select id, stat_date, ledger_type, total_count, total_amount, total_points from wx_ledger_summary
+    </sql>
+
+    <select id="selectWxLedgerSummaryList" parameterType="WxLedgerSummary" resultMap="WxLedgerSummaryResult">
+        <include refid="selectWxLedgerSummaryVo"/>
+        <where>  
+            <if test="ledgerType != null  and ledgerType != ''"> and ledger_type = #{ledgerType}</if>
+        </where>
+    </select>
+    
+    <select id="selectWxLedgerSummaryById" parameterType="Long" resultMap="WxLedgerSummaryResult">
+        <include refid="selectWxLedgerSummaryVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertWxLedgerSummary" parameterType="WxLedgerSummary" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_ledger_summary
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="statDate != null">stat_date,</if>
+            <if test="ledgerType != null and ledgerType != ''">ledger_type,</if>
+            <if test="totalCount != null">total_count,</if>
+            <if test="totalAmount != null">total_amount,</if>
+            <if test="totalPoints != null">total_points,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="statDate != null">#{statDate},</if>
+            <if test="ledgerType != null and ledgerType != ''">#{ledgerType},</if>
+            <if test="totalCount != null">#{totalCount},</if>
+            <if test="totalAmount != null">#{totalAmount},</if>
+            <if test="totalPoints != null">#{totalPoints},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWxLedgerSummary" parameterType="WxLedgerSummary">
+        update wx_ledger_summary
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="statDate != null">stat_date = #{statDate},</if>
+            <if test="ledgerType != null and ledgerType != ''">ledger_type = #{ledgerType},</if>
+            <if test="totalCount != null">total_count = #{totalCount},</if>
+            <if test="totalAmount != null">total_amount = #{totalAmount},</if>
+            <if test="totalPoints != null">total_points = #{totalPoints},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteWxLedgerSummaryById" parameterType="Long">
+        delete from wx_ledger_summary where id = #{id}
+    </delete>
+
+    <delete id="deleteWxLedgerSummaryByIds" parameterType="String">
+        delete from wx_ledger_summary where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

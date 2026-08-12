@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.WxQrScanLogMapper">
+    
+    <resultMap type="WxQrScanLog" id="WxQrScanLogResult">
+        <result property="id"    column="id"    />
+        <result property="sceneId"    column="scene_id"    />
+        <result property="bizType"    column="biz_type"    />
+        <result property="sceneStr"    column="scene_str"    />
+        <result property="openid"    column="openid"    />
+        <result property="isNewFollow"    column="is_new_follow"    />
+        <result property="scanTime"    column="scan_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectWxQrScanLogVo">
+        select id, scene_id, biz_type, scene_str, openid, is_new_follow, scan_time, remark from wx_qr_scan_log
+    </sql>
+
+    <select id="selectWxQrScanLogList" parameterType="WxQrScanLog" resultMap="WxQrScanLogResult">
+        <include refid="selectWxQrScanLogVo"/>
+        <where>  
+            <if test="bizType != null  and bizType != ''"> and biz_type = #{bizType}</if>
+            <if test="openid != null  and openid != ''"> and openid = #{openid}</if>
+            <if test="scanTime != null "> and scan_time = #{scanTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectWxQrScanLogById" parameterType="Long" resultMap="WxQrScanLogResult">
+        <include refid="selectWxQrScanLogVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertWxQrScanLog" parameterType="WxQrScanLog" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_qr_scan_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="sceneId != null">scene_id,</if>
+            <if test="bizType != null and bizType != ''">biz_type,</if>
+            <if test="sceneStr != null">scene_str,</if>
+            <if test="openid != null and openid != ''">openid,</if>
+            <if test="isNewFollow != null and isNewFollow != ''">is_new_follow,</if>
+            <if test="scanTime != null">scan_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="sceneId != null">#{sceneId},</if>
+            <if test="bizType != null and bizType != ''">#{bizType},</if>
+            <if test="sceneStr != null">#{sceneStr},</if>
+            <if test="openid != null and openid != ''">#{openid},</if>
+            <if test="isNewFollow != null and isNewFollow != ''">#{isNewFollow},</if>
+            <if test="scanTime != null">#{scanTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWxQrScanLog" parameterType="WxQrScanLog">
+        update wx_qr_scan_log
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="sceneId != null">scene_id = #{sceneId},</if>
+            <if test="bizType != null and bizType != ''">biz_type = #{bizType},</if>
+            <if test="sceneStr != null">scene_str = #{sceneStr},</if>
+            <if test="openid != null and openid != ''">openid = #{openid},</if>
+            <if test="isNewFollow != null and isNewFollow != ''">is_new_follow = #{isNewFollow},</if>
+            <if test="scanTime != null">scan_time = #{scanTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteWxQrScanLogById" parameterType="Long">
+        delete from wx_qr_scan_log where id = #{id}
+    </delete>
+
+    <delete id="deleteWxQrScanLogByIds" parameterType="String">
+        delete from wx_qr_scan_log where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

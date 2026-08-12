@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.WxMsgRuleMapper">
+    
+    <resultMap type="WxMsgRule" id="WxMsgRuleResult">
+        <result property="id"    column="id"    />
+        <result property="ruleCode"    column="rule_code"    />
+        <result property="ruleName"    column="rule_name"    />
+        <result property="bizType"    column="biz_type"    />
+        <result property="templateId"    column="template_id"    />
+        <result property="contentRule"    column="content_rule"    />
+        <result property="urlRule"    column="url_rule"    />
+        <result property="audienceRule"    column="audience_rule"    />
+        <result property="enabled"    column="enabled"    />
+        <result property="sortOrder"    column="sort_order"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectWxMsgRuleVo">
+        select id, rule_code, rule_name, biz_type, template_id, content_rule, url_rule, audience_rule, enabled, sort_order, create_by, create_time, update_by, update_time, remark from wx_msg_rule
+    </sql>
+
+    <select id="selectWxMsgRuleList" parameterType="WxMsgRule" resultMap="WxMsgRuleResult">
+        <include refid="selectWxMsgRuleVo"/>
+        <where>  
+            <if test="ruleCode != null  and ruleCode != ''"> and rule_code = #{ruleCode}</if>
+            <if test="bizType != null  and bizType != ''"> and biz_type = #{bizType}</if>
+            <if test="enabled != null  and enabled != ''"> and enabled = #{enabled}</if>
+        </where>
+    </select>
+    
+    <select id="selectWxMsgRuleById" parameterType="Long" resultMap="WxMsgRuleResult">
+        <include refid="selectWxMsgRuleVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertWxMsgRule" parameterType="WxMsgRule" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_msg_rule
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="ruleCode != null and ruleCode != ''">rule_code,</if>
+            <if test="ruleName != null and ruleName != ''">rule_name,</if>
+            <if test="bizType != null and bizType != ''">biz_type,</if>
+            <if test="templateId != null">template_id,</if>
+            <if test="contentRule != null and contentRule != ''">content_rule,</if>
+            <if test="urlRule != null">url_rule,</if>
+            <if test="audienceRule != null and audienceRule != ''">audience_rule,</if>
+            <if test="enabled != null">enabled,</if>
+            <if test="sortOrder != null">sort_order,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="ruleCode != null and ruleCode != ''">#{ruleCode},</if>
+            <if test="ruleName != null and ruleName != ''">#{ruleName},</if>
+            <if test="bizType != null and bizType != ''">#{bizType},</if>
+            <if test="templateId != null">#{templateId},</if>
+            <if test="contentRule != null and contentRule != ''">#{contentRule},</if>
+            <if test="urlRule != null">#{urlRule},</if>
+            <if test="audienceRule != null and audienceRule != ''">#{audienceRule},</if>
+            <if test="enabled != null">#{enabled},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWxMsgRule" parameterType="WxMsgRule">
+        update wx_msg_rule
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="ruleCode != null and ruleCode != ''">rule_code = #{ruleCode},</if>
+            <if test="ruleName != null and ruleName != ''">rule_name = #{ruleName},</if>
+            <if test="bizType != null and bizType != ''">biz_type = #{bizType},</if>
+            <if test="templateId != null">template_id = #{templateId},</if>
+            <if test="contentRule != null and contentRule != ''">content_rule = #{contentRule},</if>
+            <if test="urlRule != null">url_rule = #{urlRule},</if>
+            <if test="audienceRule != null and audienceRule != ''">audience_rule = #{audienceRule},</if>
+            <if test="enabled != null">enabled = #{enabled},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteWxMsgRuleById" parameterType="Long">
+        delete from wx_msg_rule where id = #{id}
+    </delete>
+
+    <delete id="deleteWxMsgRuleByIds" parameterType="String">
+        delete from wx_msg_rule where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
