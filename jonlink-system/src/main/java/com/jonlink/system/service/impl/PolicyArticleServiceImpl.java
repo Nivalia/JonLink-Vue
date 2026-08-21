@@ -53,9 +53,6 @@ public class PolicyArticleServiceImpl implements IPolicyArticleService
         article.setVersionNo(1);
         article.setViewCount(0);
         article.setCreateTime(DateUtils.getNowDate());
-        if (article.getCreateBy() != null) {
-            article.setCreateBy(article.getCreateBy());
-        }
         int n = articleMapper.insertPolicyArticle(article);
         // 同时写一条版本快照(version_no=1)
         PolicyArticleVersion v = new PolicyArticleVersion();

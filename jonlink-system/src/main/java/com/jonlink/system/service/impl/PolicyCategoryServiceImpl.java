@@ -81,6 +81,15 @@ public class PolicyCategoryServiceImpl implements IPolicyCategoryService
 
     @Override
     public int deletePolicyCategoryByIds(Long[] ids) {
+        // 任一 id 有子分类都不允许删
+        for (Long id : ids) {
+            PolicyCategory probe = new PolicyCategory();
+            probe.setParentId(id);
+            List<PolicyCategory> children = categoryMapper.selectPolicyCategoryList(probe);
+            if (!children.isEmpty()) {
+                throw new ServiceException("分类 id=" + id + " 存在子分类,不允许删除");
+            }
+        }
         return categoryMapper.deletePolicyCategoryByIds(ids);
     }
 

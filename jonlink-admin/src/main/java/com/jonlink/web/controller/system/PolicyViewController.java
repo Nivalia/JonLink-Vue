@@ -65,8 +65,8 @@ public class PolicyViewController extends BaseController
         PolicyArticleVersion targetV = history.stream()
             .filter(v -> target.equals(v.getVersionNo())).findFirst().orElse(null);
         return success(java.util.Map.of(
-            "current", current,
-            "base", baseV,
-            "target", targetV));
+            "current", current == null ? "" : current,
+            "base", baseV == null ? "" : baseV,
+            "target", targetV == null ? "" : targetV));
     }
 }

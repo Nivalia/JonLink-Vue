@@ -32,7 +32,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by parent_id, sort, id
     </select>
 
-    <!-- 树查询:全拉出后,前端或 service 拼装 children -->
     <select id="selectPolicyCategoryTree" parameterType="PolicyCategory" resultMap="PolicyCategoryResult">
         <include refid="selectPolicyCategoryVo"/>
         <where>
