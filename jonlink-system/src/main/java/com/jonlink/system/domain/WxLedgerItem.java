@@ -22,48 +22,48 @@ public class WxLedgerItem extends BaseEntity
     private Long id;
 
     /** 台账流水号(唯一) */
-    @Excel(name = "台账流水号(唯一)")
+    @Excel(name = "流水号")
     private String ledgerNo;
 
     /** 类型 1核销 2分销积分 3模板推送 4扫码 5粉丝绑定 6手动调整 */
-    @Excel(name = "类型 1核销 2分销积分 3模板推送 4扫码 5粉丝绑定 6手动调整")
+    @Excel(name = "类型")
     private String ledgerType;
 
     /** 关联业务单号(订单号/佣金单/批次号/scene) */
-    @Excel(name = "关联业务单号(订单号/佣金单/批次号/scene)")
+    @Excel(name = "关联单号")
     private String bizNo;
 
     /** 客户手机号 */
-    @Excel(name = "客户手机号")
+    @Excel(name = "手机号")
     private String phone;
 
     /** 客户openid */
-    @Excel(name = "客户openid")
+    @Excel(name = "openid")
     private String openid;
 
     /** 流水金额(佣金等) */
-    @Excel(name = "流水金额(佣金等)")
+    @Excel(name = "流水金额")
     private BigDecimal amount;
 
     /** 流水分值(积分入账=amount) */
-    @Excel(name = "流水分值(积分入账=amount)")
+    @Excel(name = "流水分值")
     private BigDecimal points;
 
     /** 方向 0流出 1流入 2中性(核销/推送) */
-    @Excel(name = "方向 0流出 1流入 2中性(核销/推送)")
+    @Excel(name = "方向")
     private String direction;
 
     /** 经办人(手动调整时; 自动=SYSTEM) */
-    @Excel(name = "经办人(手动调整时; 自动=SYSTEM)")
+    @Excel(name = "经办人")
     private String bizUser;
 
     /** 0作废 1有效 */
-    @Excel(name = "0作废 1有效")
+    @Excel(name = "状态")
     private String status;
 
     /** 业务发生时间(核销/发送/扫码时刻) */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "业务发生时间(核销/发送/扫码时刻)", width = 30, dateFormat = "yyyy-MM-dd")
+    @Excel(name = "业务时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date occurredTime;
 
     public void setId(Long id) 

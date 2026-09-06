@@ -54,6 +54,10 @@ public class WxMpTemplateMsgServiceImpl implements IWxMpTemplateMsgService
     public int insertWxMpTemplateMsg(WxMpTemplateMsg wxMpTemplateMsg)
     {
         wxMpTemplateMsg.setCreateTime(DateUtils.getNowDate());
+        if (wxMpTemplateMsg.getTransposeNo() == null || wxMpTemplateMsg.getTransposeNo().isEmpty())
+        {
+            wxMpTemplateMsg.setTransposeNo(java.util.UUID.randomUUID().toString().replace("-", ""));
+        }
         return wxMpTemplateMsgMapper.insertWxMpTemplateMsg(wxMpTemplateMsg);
     }
 

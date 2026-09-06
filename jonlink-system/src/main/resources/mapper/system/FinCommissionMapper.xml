@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.FinCommissionMapper">
+    <resultMap type="FinCommission" id="FinCommissionResult">
+        <result property="id" column="id" />
+        <result property="policyNo" column="policy_no" />
+        <result property="companyId" column="company_id" />
+        <result property="companyName" column="company_name" />
+        <result property="premium" column="premium" />
+        <result property="taxFlag" column="tax_flag" />
+        <result property="commissionRate" column="commission_rate" />
+        <result property="commissionAmount" column="commission_amount" />
+        <result property="direction" column="direction" />
+        <result property="status" column="status" />
+        <result property="policyDate" column="policy_date" />
+        <result property="settleDate" column="settle_date" />
+        <result property="receiptId" column="receipt_id" />
+        <result property="paymentId" column="payment_id" />
+        <result property="policyUser" column="policy_user" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <select id="selectFinCommissionById" parameterType="Long" resultMap="FinCommissionResult">
+        SELECT * FROM fin_commission WHERE id = #{id}
+    </select>
+
+    <select id="selectFinCommissionList" parameterType="FinCommission" resultMap="FinCommissionResult">
+        SELECT * FROM fin_commission
+        <where>
+            <if test="policyNo != null and policyNo != ''"> AND policy_no LIKE CONCAT('%', #{policyNo}, '%')</if>
+            <if test="companyId != null"> AND company_id = #{companyId}</if>
+            <if test="direction != null and direction != ''"> AND direction = #{direction}</if>
+            <if test="status != null and status != ''"> AND status = #{status}</if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectByPolicyNo" parameterType="String" resultMap="FinCommissionResult">
+        SELECT * FROM fin_commission WHERE policy_no = #{policyNo}
+    </select>
+
+    <select id="summary" resultType="java.util.Map">
+        SELECT direction, COUNT(*) AS count, SUM(commission_amount) AS totalAmount
+        FROM fin_commission
+        WHERE policy_date BETWEEN #{startDate} AND #{endDate}
+          AND direction = #{direction}
+        GROUP BY direction
+    </select>
+
+    <insert id="insertFinCommission" parameterType="FinCommission" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO fin_commission (policy_no, company_id, company_name, premium, tax_flag, commission_rate, commission_amount, direction, status, policy_date, settle_date, receipt_id, payment_id, policy_user, create_by, create_time)
+        VALUES (#{policyNo}, #{companyId}, #{companyName}, #{premium}, #{taxFlag}, #{commissionRate}, #{commissionAmount}, #{direction}, #{status}, #{policyDate}, #{settleDate}, #{receiptId}, #{paymentId}, #{policyUser}, #{createBy}, NOW())
+    </insert>
+
+    <update id="updateFinCommission" parameterType="FinCommission">
+        UPDATE fin_commission
+        SET status = #{status}, settle_date = #{settleDate}, receipt_id = #{receiptId}, payment_id = #{paymentId}, update_by = #{updateBy}, update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteFinCommissionById" parameterType="Long">
+        DELETE FROM fin_commission WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteFinCommissionByIds" parameterType="String">
+        DELETE FROM fin_commission WHERE id IN <foreach item="id" collection="array" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+</mapper>

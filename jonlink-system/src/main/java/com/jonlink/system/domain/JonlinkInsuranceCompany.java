@@ -26,20 +26,8 @@ public class JonlinkInsuranceCompany extends BaseEntity
     @Excel(name = "公司编码")
     private String companyCode;
 
-    /** 默认联系人(冗余) */
-    @Excel(name = "默认联系人(冗余)")
-    private String contactPerson;
-
-    /** 联系电话(冗余) */
-    @Excel(name = "联系电话(冗余)")
-    private String contactPhone;
-
-    /** 地址 */
-    @Excel(name = "地址")
-    private String address;
-
     /** 0停用 1启用 */
-    @Excel(name = "0停用 1启用")
+    @Excel(name = "状态")
     private String status;
 
     public void setId(Long id) 
@@ -72,36 +60,6 @@ public class JonlinkInsuranceCompany extends BaseEntity
         return companyCode;
     }
 
-    public void setContactPerson(String contactPerson) 
-    {
-        this.contactPerson = contactPerson;
-    }
-
-    public String getContactPerson() 
-    {
-        return contactPerson;
-    }
-
-    public void setContactPhone(String contactPhone) 
-    {
-        this.contactPhone = contactPhone;
-    }
-
-    public String getContactPhone() 
-    {
-        return contactPhone;
-    }
-
-    public void setAddress(String address) 
-    {
-        this.address = address;
-    }
-
-    public String getAddress() 
-    {
-        return address;
-    }
-
     public void setStatus(String status) 
     {
         this.status = status;
@@ -118,9 +76,6 @@ public class JonlinkInsuranceCompany extends BaseEntity
             .append("id", getId())
             .append("companyName", getCompanyName())
             .append("companyCode", getCompanyCode())
-            .append("contactPerson", getContactPerson())
-            .append("contactPhone", getContactPhone())
-            .append("address", getAddress())
             .append("status", getStatus())
             .append("remark", getRemark())
             .append("createBy", getCreateBy())

@@ -2,86 +2,121 @@ package com.jonlink.web.controller.system;
 
 import java.util.List;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import com.jonlink.common.annotation.Log;
 import com.jonlink.common.core.controller.BaseController;
 import com.jonlink.common.core.domain.AjaxResult;
-import com.jonlink.common.core.page.TableDataInfo;
 import com.jonlink.common.enums.BusinessType;
-import com.jonlink.common.utils.poi.ExcelUtil;
 import com.jonlink.system.domain.PolicyCategory;
 import com.jonlink.system.service.IPolicyCategoryService;
+import com.jonlink.common.utils.poi.ExcelUtil;
+import com.jonlink.common.core.page.TableDataInfo;
 
 /**
- * 政策分类 信息操作处理
+ * 政策分类Controller
  *
  * @author jonlink
- * @date 2026-08-22
  */
 @RestController
 @RequestMapping("/policy/category")
 public class PolicyCategoryController extends BaseController
 {
     @Autowired
-    private IPolicyCategoryService categoryService;
+    private IPolicyCategoryService policyCategoryService;
 
-    /** 后台分页列表 */
+    /**
+     * 查询政策分类列表
+     */
     @PreAuthorize("@ss.hasPermi('policy:category:list')")
     @GetMapping("/list")
-    public TableDataInfo list(PolicyCategory category) {
+    public TableDataInfo list(PolicyCategory policyCategory)
+    {
         startPage();
-        List<PolicyCategory> list = categoryService.selectPolicyCategoryList(category);
+        List<PolicyCategory> list = policyCategoryService.selectPolicyCategoryList(policyCategory);
         return getDataTable(list);
     }
 
-    /** 树列表(展示端调用) */
-    @PreAuthorize("@ss.hasPermi('policy:view:list')")
+    /**
+     * 查询政策分类树
+     */
+    @PreAuthorize("@ss.hasPermi('policy:category:list')")
     @GetMapping("/tree")
-    public AjaxResult tree(PolicyCategory category) {
-        // 展示端只显示启用中的分类
-        category.setStatus("1");
-        List<PolicyCategory> tree = categoryService.selectPolicyCategoryTree(category);
-        return success(tree);
+    public AjaxResult tree(PolicyCategory policyCategory)
+    {
+        policyCategory.setStatus(null);
+        return success(policyCategoryService.selectPolicyCategoryTree(policyCategory));
     }
 
-    @Log(title = "政策分类", businessType = BusinessType.EXPORT)
+    /**
+     * 导出政策分类列表
+     */
     @PreAuthorize("@ss.hasPermi('policy:category:export')")
+    @Log(title = "政策分类", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, PolicyCategory category) {
-        List<PolicyCategory> list = categoryService.selectPolicyCategoryList(category);
-        ExcelUtil<PolicyCategory> util = new ExcelUtil<>(PolicyCategory.class);
+    public void export(HttpServletResponse response, PolicyCategory policyCategory)
+    {
+        List<PolicyCategory> list = policyCategoryService.selectPolicyCategoryList(policyCategory);
+        ExcelUtil<PolicyCategory> util = new ExcelUtil<PolicyCategory>(PolicyCategory.class);
         util.exportExcel(response, list, "政策分类数据");
     }
 
+    /**
+     * 获取政策分类详细信息
+     */
     @PreAuthorize("@ss.hasPermi('policy:category:query')")
-    @GetMapping("/{id}")
-    public AjaxResult getInfo(@PathVariable Long id) {
-        return success(categoryService.selectPolicyCategoryById(id));
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id)
+    {
+        return success(policyCategoryService.selectPolicyCategoryById(id));
     }
 
+    /**
+     * 新增政策分类
+     */
     @PreAuthorize("@ss.hasPermi('policy:category:add')")
     @Log(title = "政策分类", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@Validated @RequestBody PolicyCategory category) {
-        category.setCreateBy(getUsername());
-        return toAjax(categoryService.insertPolicyCategory(category));
+    public AjaxResult add(@RequestBody PolicyCategory policyCategory)
+    {
+        if (!policyCategoryService.checkCategoryNameUnique(policyCategory))
+        {
+            return error("新增政策分类'" + policyCategory.getCategoryName() + "'失败，分类名称已存在");
+        }
+        return toAjax(policyCategoryService.insertPolicyCategory(policyCategory));
     }
 
+    /**
+     * 修改政策分类
+     */
     @PreAuthorize("@ss.hasPermi('policy:category:edit')")
     @Log(title = "政策分类", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@Validated @RequestBody PolicyCategory category) {
-        category.setUpdateBy(getUsername());
-        return toAjax(categoryService.updatePolicyCategory(category));
+    public AjaxResult edit(@RequestBody PolicyCategory policyCategory)
+    {
+        if (!policyCategoryService.checkCategoryNameUnique(policyCategory))
+        {
+            return error("修改政策分类'" + policyCategory.getCategoryName() + "'失败，分类名称已存在");
+        }
+        return toAjax(policyCategoryService.updatePolicyCategory(policyCategory));
     }
 
+    /**
+     * 删除政策分类
+     */
     @PreAuthorize("@ss.hasPermi('policy:category:remove')")
     @Log(title = "政策分类", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
-    public AjaxResult remove(@PathVariable Long[] ids) {
-        return toAjax(categoryService.deletePolicyCategoryByIds(ids));
+    public AjaxResult remove(@PathVariable Long[] ids)
+    {
+        return toAjax(policyCategoryService.deletePolicyCategoryByIds(ids));
     }
 }

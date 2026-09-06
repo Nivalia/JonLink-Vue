@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.FinRevenueMapper">
+
+    <select id="getPolicyForRevenue" parameterType="java.lang.Long" resultType="java.util.HashMap">
+        SELECT
+            id,
+            ledger_date AS ledger_date,
+            policy_no AS policy_no,
+            product_name AS product_name,
+            insurance_company AS insurance_company,
+            applicant,
+            insured,
+            premium,
+            revenue_confirmed,
+            revenue_voucher_id
+        FROM jonlink_insurance_ledger
+        WHERE id = #{policyId}
+    </select>
+
+    <update id="updateRevenueStatus">
+        UPDATE jonlink_insurance_ledger
+        SET revenue_confirmed = #{confirmed},
+            revenue_voucher_id = #{voucherId},
+            update_time = NOW()
+        WHERE id = #{policyId}
+    </update>
+
+    <select id="summary" resultType="java.util.HashMap">
+        SELECT
+            COUNT(*) AS policy_count,
+            IFNULL(SUM(premium), 0) AS total_premium,
+            SUM(CASE WHEN revenue_confirmed = '1' THEN 1 ELSE 0 END) AS confirmed_count,
+            IFNULL(SUM(CASE WHEN revenue_confirmed = '1' THEN premium ELSE 0 END), 0) AS confirmed_premium
+        FROM jonlink_insurance_ledger
+        WHERE 1 = 1
+        <if test="startDate != null and startDate != ''">
+            AND ledger_date &gt;= #{startDate}
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND ledger_date &lt;= #{endDate}
+        </if>
+    </select>
+
+</mapper>

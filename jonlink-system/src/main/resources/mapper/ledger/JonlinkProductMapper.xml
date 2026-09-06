@@ -3,7 +3,7 @@
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.jonlink.system.mapper.JonlinkProductMapper">
-    
+
     <resultMap type="JonlinkProduct" id="JonlinkProductResult">
         <result property="id"    column="id"    />
         <result property="productName"    column="product_name"    />
@@ -15,8 +15,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="typeId"    column="type_id"    />
         <result property="typeName"    column="type_name"    />
         <result property="upChannel"    column="up_channel"    />
+        <result property="channelId"    column="channel_id"    />
+        <result property="channelName"  column="channel_name"  />
         <result property="upRate"    column="up_rate"    />
         <result property="downRate"    column="down_rate"    />
+        <result property="policyType"    column="policy_type"    />
         <result property="deductTax"    column="deduct_tax"    />
         <result property="shelfStatus"    column="shelf_status"    />
         <result property="sort"    column="sort"    />
@@ -28,18 +31,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectJonlinkProductVo">
-        select id, product_name, company_id, company_name, contact_id, contact_name, contact_phone, type_id, type_name, up_channel, up_rate, down_rate, deduct_tax, shelf_status, sort, remark, create_by, create_time, update_by, update_time from jonlink_product
+        select id, product_name, company_id, company_name, contact_id, contact_name, contact_phone, type_id, type_name, up_channel, channel_id, up_rate, down_rate, policy_type, deduct_tax, shelf_status, sort, remark, create_by, create_time, update_by, update_time from jonlink_product
     </sql>
 
     <select id="selectJonlinkProductList" parameterType="JonlinkProduct" resultMap="JonlinkProductResult">
         <include refid="selectJonlinkProductVo"/>
-        <where>  
+        <where>
             <if test="productName != null  and productName != ''"> and product_name like concat('%', #{productName}, '%')</if>
-            <if test="typeId != null "> and type_id = #{typeId}</if>
-            <if test="shelfStatus != null  and shelfStatus != ''"> and shelf_status = #{shelfStatus}</if>
+                        <if test="typeId != null "> and type_id = #{typeId}</if>
+                        <if test="channelId != null"> and channel_id = #{channelId}</if>
+                        <if test="upChannel != null and upChannel != ''"> and up_channel = #{upChannel}</if>
+                        <if test="shelfStatus != null  and shelfStatus != ''"> and shelf_status = #{shelfStatus}</if>
         </where>
     </select>
-    
+
     <select id="selectJonlinkProductById" parameterType="Long" resultMap="JonlinkProductResult">
         <include refid="selectJonlinkProductVo"/>
         where id = #{id}
@@ -57,8 +62,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="typeId != null">type_id,</if>
             <if test="typeName != null">type_name,</if>
             <if test="upChannel != null">up_channel,</if>
+            <if test="channelId != null">channel_id,</if>
             <if test="upRate != null">up_rate,</if>
             <if test="downRate != null">down_rate,</if>
+            <if test="policyType != null and policyType != ''">policy_type,</if>
             <if test="deductTax != null and deductTax != ''">deduct_tax,</if>
             <if test="shelfStatus != null and shelfStatus != ''">shelf_status,</if>
             <if test="sort != null">sort,</if>
@@ -78,8 +85,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="typeId != null">#{typeId},</if>
             <if test="typeName != null">#{typeName},</if>
             <if test="upChannel != null">#{upChannel},</if>
+            <if test="channelId != null">#{channelId},</if>
             <if test="upRate != null">#{upRate},</if>
             <if test="downRate != null">#{downRate},</if>
+            <if test="policyType != null and policyType != ''">#{policyType},</if>
             <if test="deductTax != null and deductTax != ''">#{deductTax},</if>
             <if test="shelfStatus != null and shelfStatus != ''">#{shelfStatus},</if>
             <if test="sort != null">#{sort},</if>
@@ -103,8 +112,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="typeId != null">type_id = #{typeId},</if>
             <if test="typeName != null">type_name = #{typeName},</if>
             <if test="upChannel != null">up_channel = #{upChannel},</if>
+            <if test="channelId != null">channel_id = #{channelId},</if>
             <if test="upRate != null">up_rate = #{upRate},</if>
             <if test="downRate != null">down_rate = #{downRate},</if>
+            <if test="policyType != null and policyType != ''">policy_type = #{policyType},</if>
             <if test="deductTax != null and deductTax != ''">deduct_tax = #{deductTax},</if>
             <if test="shelfStatus != null and shelfStatus != ''">shelf_status = #{shelfStatus},</if>
             <if test="sort != null">sort = #{sort},</if>
@@ -122,7 +133,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </delete>
 
     <delete id="deleteJonlinkProductByIds" parameterType="String">
-        delete from jonlink_product where id in 
+        delete from jonlink_product where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>

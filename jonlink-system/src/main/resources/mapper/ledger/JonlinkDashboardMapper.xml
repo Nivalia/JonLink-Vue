@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.JonlinkDashboardMapper">
+
+    <!-- KPI: 产品 -->
+    <select id="kpiProduct" resultType="map">
+        SELECT
+            COUNT(*)                              AS product_count,
+            SUM(CASE WHEN shelf_status='1' THEN 1 ELSE 0 END) AS product_active
+        FROM jonlink_product
+    </select>
+
+    <!-- KPI: 渠道 -->
+    <select id="kpiChannel" resultType="map">
+        SELECT
+            COUNT(*)                              AS channel_count,
+            SUM(CASE WHEN status='1' THEN 1 ELSE 0 END) AS channel_active
+        FROM jonlink_channel
+    </select>
+
+    <!-- KPI: 业务员 -->
+    <select id="kpiSalesman" resultType="map">
+        SELECT
+            COUNT(*)                              AS salesman_count,
+            SUM(CASE WHEN status='1' THEN 1 ELSE 0 END) AS salesman_active
+        FROM jonlink_channel_user
+    </select>
+
+    <!-- KPI: 台账汇总 -->
+    <select id="kpiLedger" resultType="map">
+        SELECT
+            IFNULL(SUM(premium),0)                AS total_premium,
+            IFNULL(SUM(profit),0)                 AS total_profit,
+            COUNT(*)                              AS total_policy,
+            IFNULL(SUM(CASE WHEN up_settle_status='0' THEN premium ELSE 0 END),0)   AS unsettled_up_premium,
+            IFNULL(SUM(CASE WHEN down_settle_status='0' THEN premium ELSE 0 END),0) AS unsettled_down_premium,
+            IFNULL(SUM(CASE WHEN up_settle_status='0' OR down_settle_status='0' THEN premium ELSE 0 END),0) AS unsettled_premium
+        FROM jonlink_insurance_ledger
+    </select>
+
+    <!-- 保费/利润趋势（按 ledger_date 聚合，days<=90） -->
+    <select id="premiumTrend" resultType="map">
+        SELECT
+            DATE_FORMAT(ledger_date,'%m-%d') AS d,
+            IFNULL(SUM(premium),0) AS premium,
+            IFNULL(SUM(profit),0)  AS profit,
+            COUNT(*)               AS cnt
+        FROM jonlink_insurance_ledger
+        WHERE ledger_date &gt;= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+        GROUP BY DATE_FORMAT(ledger_date,'%Y-%m-%d')
+        ORDER BY DATE_FORMAT(ledger_date,'%Y-%m-%d')
+    </select>
+
+    <!-- 保险公司保费占比 -->
+    <select id="companyShare" resultType="map">
+        SELECT
+            IFNULL(insurance_company,'未填') AS name,
+            IFNULL(SUM(premium),0) AS value
+        FROM jonlink_insurance_ledger
+        GROUP BY insurance_company
+        ORDER BY value DESC
+    </select>
+
+    <!-- 渠道 TOP N（按保费） -->
+    <select id="channelTop" resultType="map">
+        SELECT
+            up_channel AS name,
+            IFNULL(SUM(premium),0) AS premium,
+            COUNT(*)               AS cnt,
+            IFNULL(SUM(profit),0)  AS profit
+        FROM jonlink_insurance_ledger
+        WHERE up_channel IS NOT NULL AND up_channel &lt;&gt; ''
+        GROUP BY up_channel
+        ORDER BY premium DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 产品上下架 -->
+    <select id="productShelf" resultType="map">
+        SELECT
+            CASE shelf_status WHEN '1' THEN '上架' WHEN '0' THEN '下架' ELSE '未知' END AS name,
+            COUNT(*) AS value
+        FROM jonlink_product
+        GROUP BY shelf_status
+    </select>
+
+    <!-- 产品政策类型 -->
+    <select id="productPolicyType" resultType="map">
+        SELECT
+            CASE policy_type WHEN '0' THEN '上游政策' WHEN '1' THEN '下游政策' ELSE '未知' END AS name,
+            COUNT(*) AS value
+        FROM jonlink_product
+        GROUP BY policy_type
+    </select>
+
+    <!-- 产品扣税 -->
+    <select id="productTax" resultType="map">
+        SELECT
+            CASE deduct_tax WHEN '1' THEN '扣税' WHEN '0' THEN '不扣税' ELSE '未知' END AS name,
+            COUNT(*) AS value
+        FROM jonlink_product
+        GROUP BY deduct_tax
+    </select>
+
+    <!-- 产品按保险公司 -->
+    <select id="productCompany" resultType="map">
+        SELECT
+            IFNULL(company_name,'未填') AS name,
+            COUNT(*) AS value
+        FROM jonlink_product
+        GROUP BY company_name
+        ORDER BY value DESC
+        LIMIT 10
+    </select>
+
+    <!-- 业务员 TOP N（按台账保费；目前 ledger 表用 applicant 作投保人/业务员汇聚） -->
+    <select id="salesmanTop" resultType="map">
+        SELECT
+            applicant AS name,
+            IFNULL(SUM(premium),0) AS premium,
+            COUNT(*)               AS cnt,
+            IFNULL(SUM(profit),0)  AS profit
+        FROM jonlink_insurance_ledger
+        WHERE applicant IS NOT NULL AND applicant &lt;&gt; ''
+        GROUP BY applicant
+        ORDER BY premium DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 佣金汇总（本月） -->
+    <select id="commissionSummary" resultType="map">
+        SELECT
+            IFNULL(SUM(commission_amount),0) AS total_commission,
+            IFNULL(SUM(premium),0)          AS total_premium,
+            IFNULL(AVG(commission_rate),0)  AS avg_rate
+        FROM fin_commission
+        WHERE YEAR(create_time) = YEAR(CURDATE()) AND MONTH(create_time) = MONTH(CURDATE())
+    </select>
+
+    <!-- 佣金月度趋势（近12个月） -->
+    <select id="commissionTrend" resultType="map">
+        SELECT
+            DATE_FORMAT(create_time,'%Y-%m') AS m,
+            IFNULL(SUM(commission_amount),0) AS commission,
+            IFNULL(SUM(premium),0)           AS premium,
+            IFNULL(AVG(commission_rate),0)   AS rate
+        FROM fin_commission
+        WHERE create_time &gt;= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+        GROUP BY DATE_FORMAT(create_time,'%Y-%m')
+        ORDER BY m
+    </select>
+
+    <!-- 税费分布 -->
+    <select id="taxBreakdown" resultType="map">
+        SELECT
+            IFNULL(insurance_type,'未分类') AS name,
+            IFNULL(SUM(premium * 0.06),0)  AS value
+        FROM jonlink_insurance_ledger
+        GROUP BY insurance_type
+        ORDER BY value DESC
+    </select>
+
+    <!-- 发票统计 -->
+    <select id="invoiceStats" resultType="map">
+        SELECT
+            COUNT(*) AS total_count,
+            IFNULL(SUM(amount),0) AS total_amount,
+            SUM(CASE WHEN status='1' THEN 1 ELSE 0 END) AS issued_count,
+            IFNULL(SUM(CASE WHEN status='1' THEN amount ELSE 0 END),0) AS issued_amount
+        FROM fin_invoice
+    </select>
+
+    <!-- 最近台账 -->
+    <select id="recentLedger" resultType="map">
+        SELECT
+            id,
+            policy_no,
+            product_name,
+            insurance_company,
+            up_channel,
+            applicant,
+            insured,
+            premium,
+            profit,
+            DATE_FORMAT(ledger_date,'%Y-%m-%d') AS ledger_date,
+            CASE up_settle_status WHEN '1' THEN '已结算' ELSE '待结算' END AS up_status,
+            CASE down_settle_status WHEN '1' THEN '已结算' ELSE '待结算' END AS down_status
+        FROM jonlink_insurance_ledger
+        ORDER BY ledger_date DESC, id DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 科目余额 TOP10（dashboard 用） -->
+    <select id="subjectBalanceTop10" resultType="map">
+        SELECT name, debit, credit, value
+        FROM (
+            SELECT
+                s.subject_name AS name,
+                IFNULL(SUM(e.debit_amount),0) AS debit,
+                IFNULL(SUM(e.credit_amount),0) AS credit,
+                CASE s.balance_direction
+                    WHEN '0' THEN IFNULL(SUM(e.debit_amount),0) - IFNULL(SUM(e.credit_amount),0)
+                    ELSE IFNULL(SUM(e.credit_amount),0) - IFNULL(SUM(e.debit_amount),0)
+                END AS value
+            FROM fin_subject s
+            LEFT JOIN fin_voucher_entry e ON e.subject_id = s.id
+            WHERE s.is_leaf = '1'
+            GROUP BY s.id, s.subject_name, s.balance_direction
+        ) t
+        WHERE value != 0
+        ORDER BY ABS(value) DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 退保率统计 -->
+    <select id="surrenderRate" resultType="map">
+        SELECT
+            COUNT(*) AS total_policy,
+            SUM(CASE WHEN surrender_status = '1' THEN 1 ELSE 0 END) AS surrender_count,
+            IFNULL(SUM(premium), 0) AS total_premium,
+            IFNULL(SUM(CASE WHEN surrender_status = '1' THEN premium ELSE 0 END), 0) AS surrender_premium,
+            CASE
+                WHEN COUNT(*) > 0
+                THEN ROUND(SUM(CASE WHEN surrender_status = '1' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1)
+                ELSE 0
+            END AS surrender_rate_count,
+            CASE
+                WHEN SUM(premium) > 0
+                THEN ROUND(SUM(CASE WHEN surrender_status = '1' THEN premium ELSE 0 END) * 100.0 / SUM(premium), 1)
+                ELSE 0
+            END AS surrender_rate_premium
+        FROM jonlink_insurance_ledger
+        WHERE MONTH(ledger_date) = MONTH(CURDATE())
+          AND YEAR(ledger_date) = YEAR(CURDATE())
+    </select>
+
+    <!-- 公众号运营指标 -->
+    <select id="mpOperationStats" resultType="map">
+        SELECT
+            (SELECT COUNT(*) FROM wx_mp_user WHERE subscribe = '1') AS fans,
+            (SELECT COUNT(*) FROM wx_mp_user WHERE subscribe = '1'
+             AND MONTH(create_time) = MONTH(CURDATE()) AND YEAR(create_time) = YEAR(CURDATE())) AS fans_month,
+            (SELECT COUNT(*) FROM wx_qr_scan_log
+             WHERE DATE(scan_time) = CURDATE()) AS scan_today,
+            (SELECT COUNT(*) FROM wx_mp_template_msg WHERE status = '1'
+             AND MONTH(create_time) = MONTH(CURDATE()) AND YEAR(create_time) = YEAR(CURDATE())) AS msg_sent,
+            (SELECT COUNT(*) FROM wx_mp_template_msg WHERE status IN ('1','2')
+             AND MONTH(create_time) = MONTH(CURDATE()) AND YEAR(create_time) = YEAR(CURDATE())) AS msg_total,
+            (SELECT COUNT(*) FROM wx_qr_scan_log WHERE is_new_follow = '1'
+             AND MONTH(scan_time) = MONTH(CURDATE()) AND YEAR(scan_time) = YEAR(CURDATE())) AS scan_new_follow,
+            (SELECT COUNT(*) FROM wx_qr_scan_log
+             WHERE MONTH(scan_time) = MONTH(CURDATE()) AND YEAR(scan_time) = YEAR(CURDATE())) AS scan_total
+    </select>
+
+    <!-- 险种分布（按台账保费） -->
+    <select id="insuranceTypeDist" resultType="map">
+        SELECT
+            IFNULL(insurance_type, '未分类') AS name,
+            IFNULL(SUM(premium), 0) AS value
+        FROM jonlink_insurance_ledger
+        WHERE insurance_type IS NOT NULL AND insurance_type != ''
+        GROUP BY insurance_type
+        ORDER BY value DESC
+    </select>
+
+    <!-- 续保率统计 -->
+    <select id="renewalRate" resultType="map">
+        SELECT
+            COUNT(DISTINCT policy_no) AS total_unique_policies,
+            SUM(CASE WHEN cnt > 1 THEN 1 ELSE 0 END) AS renewal_policies,
+            CASE
+                WHEN COUNT(DISTINCT policy_no) > 0
+                THEN ROUND(SUM(CASE WHEN cnt > 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(DISTINCT policy_no), 1)
+                ELSE 0
+            END AS renewal_rate
+        FROM (
+            SELECT policy_no, COUNT(*) AS cnt
+            FROM jonlink_insurance_ledger
+            WHERE policy_no IS NOT NULL AND policy_no != ''
+            GROUP BY policy_no
+        ) t
+    </select>
+
+    <!-- 活跃度统计（本月有保单的产品占比） -->
+    <select id="activityRate" resultType="map">
+        SELECT
+            (SELECT COUNT(*) FROM jonlink_product WHERE shelf_status = '1') AS total_products,
+            (SELECT COUNT(DISTINCT product_id) FROM jonlink_insurance_ledger
+             WHERE MONTH(ledger_date) = MONTH(CURDATE())
+             AND YEAR(ledger_date) = YEAR(CURDATE())
+             AND product_id IS NOT NULL) AS active_products,
+            CASE
+                WHEN (SELECT COUNT(*) FROM jonlink_product WHERE shelf_status = '1') > 0
+                THEN ROUND(
+                    (SELECT COUNT(DISTINCT product_id) FROM jonlink_insurance_ledger
+                     WHERE MONTH(ledger_date) = MONTH(CURDATE())
+                     AND YEAR(ledger_date) = YEAR(CURDATE())
+                     AND product_id IS NOT NULL) * 100.0 /
+                    (SELECT COUNT(*) FROM jonlink_product WHERE shelf_status = '1'), 1)
+                ELSE 0
+            END AS activity_rate
+    </select>
+
+    <!-- 按险别分布（产品） -->
+    <select id="productByType" resultType="map">
+        SELECT
+            IFNULL(type_name, '未分类') AS name,
+            COUNT(*) AS value
+        FROM jonlink_product
+        WHERE type_name IS NOT NULL AND type_name != ''
+        GROUP BY type_name
+        ORDER BY value DESC
+    </select>
+
+</mapper>

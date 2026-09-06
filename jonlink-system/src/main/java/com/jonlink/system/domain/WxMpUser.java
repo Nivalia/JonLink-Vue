@@ -21,11 +21,11 @@ public class WxMpUser extends BaseEntity
     private Long id;
 
     /** 微信openid(无感获取) */
-    @Excel(name = "微信openid(无感获取)")
+    @Excel(name = "openid")
     private String openid;
 
     /** 手机号(授权回填/手动更换) */
-    @Excel(name = "手机号(授权回填/手动更换)")
+    @Excel(name = "手机号")
     private String phone;
 
     /** 昵称 */
@@ -37,7 +37,7 @@ public class WxMpUser extends BaseEntity
     private String avatar;
 
     /** 性别 0未知 1男 2女 */
-    @Excel(name = "性别 0未知 1男 2女")
+    @Excel(name = "性别")
     private String sex;
 
     /** 国家 */
@@ -53,12 +53,12 @@ public class WxMpUser extends BaseEntity
     private String city;
 
     /** 关注状态 0否 1是 */
-    @Excel(name = "关注状态 0否 1是")
+    @Excel(name = "订阅")
     private String subscribe;
 
     /** 关注时间(重复关注刷新) */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "关注时间(重复关注刷新)", width = 30, dateFormat = "yyyy-MM-dd")
+    @Excel(name = "关注时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date subscribeTime;
 
     /** 取关时间 */
@@ -68,7 +68,7 @@ public class WxMpUser extends BaseEntity
 
     /** 最近活跃时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "最近活跃时间", width = 30, dateFormat = "yyyy-MM-dd")
+    @Excel(name = "最近活跃", width = 30, dateFormat = "yyyy-MM-dd")
     private Date lastActivityTime;
 
     /** 互动次数 */
@@ -76,15 +76,15 @@ public class WxMpUser extends BaseEntity
     private Long activityCount;
 
     /** 活跃度 1高 2中 3低(定时任务计算) */
-    @Excel(name = "活跃度 1高 2中 3低(定时任务计算)")
+    @Excel(name = "活跃度")
     private String activityLevel;
 
     /** 绑定系统用户ID(可空) */
-    @Excel(name = "绑定系统用户ID(可空)")
+    @Excel(name = "用户ID")
     private Long userId;
 
     /** 上级分销员user_id(扫码绑定) */
-    @Excel(name = "上级分销员user_id(扫码绑定)")
+    @Excel(name = "上级分销员")
     private Long distributorId;
 
     /** 上级分销员名称(JOIN wx_dist_member 带出, 非表字段) */
@@ -92,12 +92,18 @@ public class WxMpUser extends BaseEntity
 
     /** 归属绑定时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "归属绑定时间", width = 30, dateFormat = "yyyy-MM-dd")
+    @Excel(name = "绑定时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date bindTime;
 
     /** 0扫码 1手动 2其它 */
-    @Excel(name = "0扫码 1手动 2其它")
+    @Excel(name = "绑定来源")
     private String bindSource;
+
+    /** 关注起始日(查询用,非表字段, 字符串 YYYY-MM-DD) */
+    private String subscribeTimeBegin;
+
+    /** 关注结束日(查询用,非表字段, 字符串 YYYY-MM-DD) */
+    private String subscribeTimeEnd;
 
     public void setId(Long id) 
     {
@@ -289,14 +295,34 @@ public class WxMpUser extends BaseEntity
         return bindTime;
     }
 
-    public void setBindSource(String bindSource) 
+    public void setBindSource(String bindSource)
     {
         this.bindSource = bindSource;
     }
 
-    public String getBindSource() 
+    public String getBindSource()
     {
         return bindSource;
+    }
+
+    public void setSubscribeTimeBegin(String subscribeTimeBegin)
+    {
+        this.subscribeTimeBegin = subscribeTimeBegin;
+    }
+
+    public String getSubscribeTimeBegin()
+    {
+        return subscribeTimeBegin;
+    }
+
+    public void setSubscribeTimeEnd(String subscribeTimeEnd)
+    {
+        this.subscribeTimeEnd = subscribeTimeEnd;
+    }
+
+    public String getSubscribeTimeEnd()
+    {
+        return subscribeTimeEnd;
     }
 
     @Override

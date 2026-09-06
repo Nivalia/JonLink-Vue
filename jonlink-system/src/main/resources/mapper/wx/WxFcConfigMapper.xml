@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.WxFcConfigMapper">
+
+    <resultMap type="WxFcConfig" id="WxFcConfigResult">
+        <result property="id" column="id" />
+        <result property="fieldKey" column="field_key" />
+        <result property="fieldLabel" column="field_label" />
+        <result property="fieldType" column="field_type" />
+        <result property="sourceType" column="source_type" />
+        <result property="dataSource" column="data_source" />
+        <result property="visible" column="visible" />
+        <result property="sortNo" column="sort_no" />
+        <result property="required" column="required" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectWxFcConfigVo">
+        select id, field_key, field_label, field_type, source_type, data_source, visible, sort_no, required, create_by, create_time, update_by, update_time
+        from wx_fc_config
+    </sql>
+
+    <select id="selectWxFcConfigList" parameterType="WxFcConfig" resultMap="WxFcConfigResult">
+        <include refid="selectWxFcConfigVo" />
+        <where>
+            <if test="fieldKey != null and fieldKey != ''"> and field_key = #{fieldKey}</if>
+            <if test="fieldLabel != null and fieldLabel != ''"> and field_label like concat('%', #{fieldLabel}, '%')</if>
+            <if test="fieldType != null and fieldType != ''"> and field_type = #{fieldType}</if>
+            <if test="sourceType != null and sourceType != ''"> and source_type = #{sourceType}</if>
+            <if test="visible != null and visible != ''"> and visible = #{visible}</if>
+            <if test="required != null and required != ''"> and required = #{required}</if>
+        </where>
+        order by sort_no asc, id asc
+    </select>
+
+    <select id="selectWxFcConfigById" parameterType="Long" resultMap="WxFcConfigResult">
+        <include refid="selectWxFcConfigVo" />
+        where id = #{id}
+    </select>
+
+    <select id="selectWxFcConfigForRender" resultMap="WxFcConfigResult">
+        <include refid="selectWxFcConfigVo" />
+        where source_type = #{sourceType} and visible = '1'
+        order by sort_no asc, id asc
+    </select>
+
+    <insert id="insertWxFcConfig" parameterType="WxFcConfig" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_fc_config
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="fieldKey != null and fieldKey != ''">field_key,</if>
+            <if test="fieldLabel != null and fieldLabel != ''">field_label,</if>
+            <if test="fieldType != null and fieldType != ''">field_type,</if>
+            <if test="sourceType != null and sourceType != ''">source_type,</if>
+            <if test="dataSource != null and dataSource != ''">data_source,</if>
+            <if test="visible != null and visible != ''">visible,</if>
+            <if test="sortNo != null">sort_no,</if>
+            <if test="required != null and required != ''">required,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            update_time,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="fieldKey != null and fieldKey != ''">#{fieldKey},</if>
+            <if test="fieldLabel != null and fieldLabel != ''">#{fieldLabel},</if>
+            <if test="fieldType != null and fieldType != ''">#{fieldType},</if>
+            <if test="sourceType != null and sourceType != ''">#{sourceType},</if>
+            <if test="dataSource != null and dataSource != ''">#{dataSource},</if>
+            <if test="visible != null and visible != ''">#{visible},</if>
+            <if test="sortNo != null">#{sortNo},</if>
+            <if test="required != null and required != ''">#{required},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            sysdate(),
+        </trim>
+    </insert>
+
+    <update id="updateWxFcConfig" parameterType="WxFcConfig">
+        update wx_fc_config
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="fieldKey != null and fieldKey != ''">field_key = #{fieldKey},</if>
+            <if test="fieldLabel != null and fieldLabel != ''">field_label = #{fieldLabel},</if>
+            <if test="fieldType != null and fieldType != ''">field_type = #{fieldType},</if>
+            <if test="sourceType != null and sourceType != ''">source_type = #{sourceType},</if>
+            <if test="dataSource != null and dataSource != ''">data_source = #{dataSource},</if>
+            <if test="visible != null and visible != ''">visible = #{visible},</if>
+            <if test="sortNo != null">sort_no = #{sortNo},</if>
+            <if test="required != null and required != ''">required = #{required},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate(),
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteWxFcConfigById" parameterType="Long">
+        delete from wx_fc_config where id = #{id}
+    </delete>
+
+    <delete id="deleteWxFcConfigByIds" parameterType="Long">
+        delete from wx_fc_config where id in
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

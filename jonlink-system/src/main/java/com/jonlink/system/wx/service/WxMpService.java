@@ -1,12 +1,15 @@
 package com.jonlink.system.wx.service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.jonlink.common.utils.DateUtils;
 import com.jonlink.common.utils.StringUtils;
 import com.jonlink.common.utils.http.HttpUtils;
+import com.jonlink.common.utils.security.AesUtils;
 import com.jonlink.system.domain.WxMpAccount;
 import com.jonlink.system.mapper.WxMpAccountMapper;
 import org.slf4j.Logger;
@@ -54,33 +57,106 @@ public class WxMpService
         return acc != null && StringUtils.isNotEmpty(acc.getAppId()) && StringUtils.isNotEmpty(acc.getAppSecret());
     }
 
-    /** 获取 access_token（带缓存，未配置时 mock） */
+    /** 获取 access_token 三级缓存: ①内存 → ②库(微信接口响应存库) → ③微信接口刷新并写库 */
     public String getAccessToken()
     {
-        if (!isReal())
+        WxMpAccount acc = getAccount();
+        if (acc == null || StringUtils.isEmpty(acc.getAppId()) || StringUtils.isEmpty(acc.getAppSecret()))
         {
-            log.warn("[wx-mock] 未配置公众号 appid/secret，使用 mock access_token");
+            log.warn("[wx-mock] 未配置公众号 appid/secret,使用 mock access_token");
             return "mock_access_token_" + System.currentTimeMillis();
         }
+        // ① 内存缓存
         if (accessToken != null && System.currentTimeMillis() < tokenExpireAt)
         {
             return accessToken;
         }
-        WxMpAccount acc = getAccount();
-        String url = API + "/token?grant_type=client_credential&appid=" + acc.getAppId() + "&secret=" + acc.getAppSecret();
+        // ② 库缓存(token_expire_time 未过期)
+        Long dbExpireAt = acc.getTokenExpireTime() == null ? 0L : acc.getTokenExpireTime().getTime();
+        if (StringUtils.isNotEmpty(acc.getAccessToken()) && dbExpireAt > System.currentTimeMillis())
+        {
+            accessToken = acc.getAccessToken();
+            tokenExpireAt = dbExpireAt;
+            log.info("[wx-token] 命中数据库缓存,expiresAt={}", DateUtils.parseDateToStr("yyyy-MM-dd HH:mm:ss", new Date(tokenExpireAt)));
+            return accessToken;
+        }
+        // ③ 调微信刷新 + 写库
+        String appSecret = AesUtils.decrypt(acc.getAppSecret());
+        String url = API + "/token?grant_type=client_credential&appid=" + acc.getAppId() + "&secret=" + appSecret;
         String resp = HttpUtils.sendGet(url);
         JSONObject json = JSON.parseObject(resp);
         if (json != null && json.getString("access_token") != null)
         {
-            accessToken = json.getString("access_token");
-            tokenExpireAt = System.currentTimeMillis() + (json.getIntValue("expires_in", 7200) - 200) * 1000L;
-            return accessToken;
+            String newToken = json.getString("access_token");
+            long expireIn = json.getIntValue("expires_in", 7200);
+            // 提前 200 秒过期, 但最少保留 60 秒有效期
+            long bufferSeconds = Math.min(200, Math.max(0, expireIn - 60));
+            long newExpireAt = System.currentTimeMillis() + (expireIn - bufferSeconds) * 1000L;
+            accessToken = newToken;
+            tokenExpireAt = newExpireAt;
+            // 写库: 更新启用账号的 access_token + token_expire_time
+            WxMpAccount upd = new WxMpAccount();
+            upd.setId(acc.getId());
+            upd.setAccessToken(newToken);
+            upd.setTokenExpireTime(new Date(newExpireAt));
+            upd.setUpdateTime(DateUtils.getNowDate());
+            try
+            {
+                wxMpAccountMapper.updateWxMpAccount(upd);
+                log.info("[wx-token] 已刷新并写入数据库,expiresIn={}s", expireIn);
+            }
+            catch (Exception e)
+            {
+                log.warn("[wx-token] 写库失败,仅内存缓存: {}", e.getMessage());
+            }
+            return newToken;
         }
         log.error("[wx] 获取 access_token 失败: {}", resp);
         return null;
     }
 
-    /** 发送模板消息；返回 (是否成功, 微信msgid/错误信息) */
+    /**
+     * 根据 AppID + Secret 获取公众号基本信息（名称等）
+     *
+     * @param appId     公众号 AppID
+     * @param appSecret 公众号 AppSecret（明文）
+     * @return 包含 nick_name 的 JSON，失败返回 null
+     */
+    public JSONObject fetchAccountBasicInfo(String appId, String appSecret)
+    {
+        if (StringUtils.isEmpty(appId) || StringUtils.isEmpty(appSecret))
+        {
+            log.warn("[wx-fetch] appId 或 appSecret 为空");
+            return null;
+        }
+        appId = appId.trim();
+        appSecret = appSecret.trim();
+        log.info("[wx-fetch] appId={}, secretlen={}, secret前4位={}", appId, appSecret.length(), appSecret.substring(0, Math.min(4, appSecret.length())));
+        // 1. 获取 access_token
+        String tokenUrl = API + "/token?grant_type=client_credential&appid=" + appId + "&secret=" + appSecret;
+        log.info("[wx-fetch] 请求 access_token, appId={}, secretlen={}", appId, appSecret != null ? appSecret.length() : 0);
+        String tokenResp = HttpUtils.sendGet(tokenUrl);
+        log.info("[wx-fetch] access_token 响应: {}", tokenResp);
+        JSONObject tokenJson = JSON.parseObject(tokenResp);
+        if (tokenJson == null || tokenJson.getString("access_token") == null)
+        {
+            log.error("[wx-fetch] 获取 access_token 失败, resp={}", tokenResp);
+            return null;
+        }
+        String accessToken = tokenJson.getString("access_token");
+        // 2. 获取账号基本信息
+        String infoUrl = API + "/account/getaccountbasicinfo?access_token=" + accessToken;
+        log.info("[wx-fetch] 请求 getaccountbasicinfo");
+        String infoResp = HttpUtils.sendGet(infoUrl);
+        log.info("[wx-fetch] getaccountbasicinfo 响应: {}", infoResp);
+        JSONObject infoJson = JSON.parseObject(infoResp);
+        if (infoJson == null || (infoJson.getString("nickname") == null && infoJson.getString("nick_name") == null))
+        {
+            log.error("[wx-fetch] 获取账号信息失败, resp={}", infoResp);
+            return null;
+        }
+        return infoJson;
+    }
     public Map<String, Object> sendTemplateMsg(String openid, String templateId, Map<String, Object> data,
             String url)
     {
@@ -104,8 +180,11 @@ public class WxMpService
         body.put("url", url);
         JSONObject dataObj = new JSONObject();
         data.forEach((k, v) -> {
+            String value = v != null ? String.valueOf(v).trim() : "";
+            // 根据微信模板字段类型清洗值
+            value = sanitizeFieldValue(k, value);
             JSONObject kv = new JSONObject();
-            kv.put("value", v);
+            kv.put("value", value);
             kv.put("color", "#173177");
             dataObj.put(k, kv);
         });
@@ -116,8 +195,79 @@ public class WxMpService
         {
             return Map.of("ok", true, "msgid", String.valueOf(json.getLongValue("msgid")));
         }
-        log.error("[wx] 模板消息发送失败: {}", resp);
+        log.error("[wx] 模板消息发送失败: openid={} templateId={} url={} data={} resp={}",
+                openid, templateId, url, dataObj.toJSONString(), resp);
         return Map.of("ok", false, "err", json == null ? resp : json.getString("errmsg"));
+    }
+
+    /**
+     * 根据微信模板字段类型清洗值。
+     * 微信模板消息各类型有严格格式要求，不含前缀标签文字。
+     *
+     * @param key   关键词 key (如 amount3, character_string2, thing12)
+     * @param value 原始值
+     * @return 清洗后的值
+     */
+    private String sanitizeFieldValue(String key, String value) {
+        if (value == null || value.isEmpty()) {
+            return "-";
+        }
+        String k = key != null ? key.toLowerCase() : "";
+
+        // amount 类型：只保留数字、小数点、¥/￥符号
+        if (k.startsWith("amount")) {
+            // 去掉中文前缀（如 "交费金额:" → "10000.00"）
+            String cleaned = value.replaceAll("^[^\\d¥￥.]*", "").replaceAll("[^\\d¥￥.]", "");
+            // 如果清洗后为空（全是中文），尝试提取数字
+            if (cleaned.isEmpty()) {
+                cleaned = value.replaceAll("[^\\d.]", "");
+            }
+            return cleaned.isEmpty() ? "0" : cleaned;
+        }
+
+        // character_string 类型：只允许字母数字和有限特殊字符，不允许中文
+        if (k.startsWith("character_string")) {
+            // 去掉中文前缀（如 "保单编号:" → "P000000001"）
+            String cleaned = value.replaceAll("[^a-zA-Z0-9\\-_ ]", "");
+            // 如果去掉中文后为空，说明整个值都是中文，尝试去掉冒号等分隔符
+            if (cleaned.isEmpty()) {
+                cleaned = value.replaceAll("[：:]", "").replaceAll("[\\u4e00-\\u9fa5]", "");
+            }
+            return cleaned.isEmpty() ? "N/A" : cleaned.trim();
+        }
+
+        // car_number 类型：车牌号，保留字母数字和中文省份简称
+        if (k.startsWith("car_number")) {
+            // 去掉 "车牌号:" 等前缀标签
+            String cleaned = value.replaceAll("^[^\\u4e00-\\u9fa5a-zA-Z0-9]*", "");
+            return cleaned.isEmpty() ? value : cleaned;
+        }
+
+        // thing 类型：最多 20 个字符，允许中文
+        if (k.startsWith("thing")) {
+            String cleaned = value.replaceAll("^[^\\u4e00-\\u9fa5a-zA-Z0-9\\-_ ]*", "");
+            if (cleaned.isEmpty()) cleaned = value;
+            return cleaned.length() > 20 ? cleaned.substring(0, 20) : cleaned;
+        }
+
+        // phrase 类型：最多 20 个字符，允许中文
+        if (k.startsWith("phrase")) {
+            String cleaned = value.replaceAll("^[^\\u4e00-\\u9fa5a-zA-Z0-9\\-_ ]*", "");
+            if (cleaned.isEmpty()) cleaned = value;
+            return cleaned.length() > 20 ? cleaned.substring(0, 20) : cleaned;
+        }
+
+        // time 类型：去掉中文前缀（如 "缴费时间:" → "2023-01-08"）
+        if (k.startsWith("time") || k.startsWith("date")) {
+            String cleaned = value.replaceAll("^[^\\d\\-/:年月日时分秒.]*", "");
+            return cleaned.isEmpty() ? value : cleaned;
+        }
+
+        // 默认：去掉开头的中文前缀标签
+        String cleaned = value.replaceAll("^[^\\u4e00-\\u9fa5]*[\\u4e00-\\u9fa5]+[:：]?\\s*", "");
+        if (!cleaned.equals(value)) return cleaned.isEmpty() ? value : cleaned;
+
+        return value;
     }
 
     /** 创建永久二维码(分销); 返回 ticket/qrUrl/错误 */
@@ -183,7 +333,7 @@ public class WxMpService
         }
         String resp = HttpUtils.sendGet(API + "/user/info?access_token=" + token + "&openid=" + openid);
         JSONObject json = JSON.parseObject(resp);
-        if (json != null && json.getIntValue("errcode", -1) == -1 || (json != null && json.getIntValue("errcode") == 0))
+        if (json != null && (json.getIntValue("errcode", -1) == 0 || !json.containsKey("errcode")))
         {
             return Map.of("nickname", json.getString("nickname"), "sex", json.getString("sex"),
                     "subscribe", json.getString("subscribe"), "avatar", json.getString("headimgurl"),
@@ -229,7 +379,7 @@ public class WxMpService
         }
         String resp = HttpUtils.sendGet(API + "/template/get_all_private_template?access_token=" + token);
         JSONObject json = JSON.parseObject(resp);
-        if (json != null && json.getIntValue("errcode", -1) == 0)
+        if (json != null && (!json.containsKey("errcode") || json.getIntValue("errcode") == 0))
         {
             return json.getJSONArray("template_list").toJavaList(JSONObject.class);
         }
@@ -312,9 +462,14 @@ public class WxMpService
         {
             String url = API + "/user/get?access_token=" + token + "&next_openid=" + nextOpenid;
             JSONObject json = JSON.parseObject(HttpUtils.sendGet(url));
-            if (json == null || json.getIntValue("errcode", -1) != 0)
+            if (json == null)
             {
-                log.error("[wx] 拉取粉丝列表失败: {}", json == null ? "null" : json.toJSONString());
+                log.error("[wx] 拉取粉丝列表失败: null");
+                break;
+            }
+            if (json.containsKey("errcode") && json.getIntValue("errcode") != 0)
+            {
+                log.error("[wx] 拉取粉丝列表失败: {}", json.toJSONString());
                 break;
             }
             JSONArray data = json.getJSONObject("data") == null ? null : json.getJSONObject("data").getJSONArray("openid");
@@ -332,6 +487,7 @@ public class WxMpService
             }
         }
         total = openids.size();
+        log.warn("[wx] 拉取到 {} 个 openid, 开始批量获取详情", total);
         // 2. 批量获取用户详情（每批 100）
         for (int i = 0; i < openids.size(); i += 100)
         {
@@ -348,7 +504,12 @@ public class WxMpService
             body.put("user_list", list);
             String resp = HttpUtils.sendPost(API + "/user/info/batchget?access_token=" + token, body.toJSONString());
             JSONObject json = JSON.parseObject(resp);
-            if (json == null || json.getIntValue("errcode", -1) != 0)
+            if (json == null)
+            {
+                log.error("[wx] 批量获取粉丝详情失败: null");
+                continue;
+            }
+            if (json.containsKey("errcode") && json.getIntValue("errcode") != 0)
             {
                 log.error("[wx] 批量获取粉丝详情失败: {}", resp);
                 continue;
@@ -356,7 +517,12 @@ public class WxMpService
             JSONArray userList = json.getJSONArray("user_info_list");
             if (userList == null)
             {
+                log.warn("[wx] batchget 返回 user_info_list 为空, resp={}", resp);
                 continue;
+            }
+            if (i == 0)
+            {
+                log.warn("[wx] batchget 首批用户数据样本: {}", userList.size() > 0 ? userList.getJSONObject(0).toJSONString() : "empty");
             }
             for (int j = 0; j < userList.size(); j++)
             {

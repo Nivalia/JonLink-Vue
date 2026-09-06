@@ -58,4 +58,8 @@ public interface WxMpTemplateMsgMapper
      * @return 结果
      */
     public int deleteWxMpTemplateMsgByIds(Long[] ids);
+
+    public int updateCheckResult(WxMpTemplateMsg msg);
+
+    public List<WxMpTemplateMsg> selectByBatchNoForCheck(String batchNo);
 }

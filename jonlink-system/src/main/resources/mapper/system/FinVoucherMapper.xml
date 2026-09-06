@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.FinVoucherMapper">
+    
+    <resultMap type="FinVoucher" id="FinVoucherResult">
+        <result property="id"    column="id"    />
+        <result property="voucherNo"    column="voucher_no"    />
+        <result property="periodCode"    column="period_code"    />
+        <result property="voucherDate"    column="voucher_date"    />
+        <result property="sourceType"    column="source_type"    />
+        <result property="sourceId"    column="source_id"    />
+        <result property="summary"    column="summary"    />
+        <result property="totalDebit"    column="total_debit"    />
+        <result property="totalCredit"    column="total_credit"    />
+        <result property="status"    column="status"    />
+        <result property="auditor"    column="auditor"    />
+        <result property="auditTime"    column="audit_time"    />
+        <result property="poster"    column="poster"    />
+        <result property="postTime"    column="post_time"    />
+        <result property="voucherMaker"    column="voucher_maker"    />
+        <result property="remark"    column="remark"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectFinVoucherVo">
+        select id, voucher_no, period_code, voucher_date, source_type, source_id, summary, total_debit, total_credit, status, auditor, audit_time, poster, post_time, voucher_maker, remark, create_by, create_time, update_by, update_time from fin_voucher
+    </sql>
+
+    <select id="selectFinVoucherList" parameterType="FinVoucher" resultMap="FinVoucherResult">
+        <include refid="selectFinVoucherVo"/>
+        <where>  
+            <if test="voucherNo != null  and voucherNo != ''"> and voucher_no = #{voucherNo}</if>
+            <if test="periodCode != null  and periodCode != ''"> and period_code = #{periodCode}</if>
+            <if test="voucherDate != null "> and voucher_date = #{voucherDate}</if>
+            <if test="sourceType != null  and sourceType != ''"> and source_type = #{sourceType}</if>
+            <if test="sourceId != null "> and source_id = #{sourceId}</if>
+            <if test="summary != null  and summary != ''"> and summary = #{summary}</if>
+            <if test="totalDebit != null "> and total_debit = #{totalDebit}</if>
+            <if test="totalCredit != null "> and total_credit = #{totalCredit}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="auditor != null  and auditor != ''"> and auditor = #{auditor}</if>
+            <if test="auditTime != null "> and audit_time = #{auditTime}</if>
+            <if test="poster != null  and poster != ''"> and poster = #{poster}</if>
+            <if test="postTime != null "> and post_time = #{postTime}</if>
+            <if test="voucherMaker != null  and voucherMaker != ''"> and voucher_maker = #{voucherMaker}</if>
+        </where>
+    </select>
+    
+    <select id="selectFinVoucherById" parameterType="Long" resultMap="FinVoucherResult">
+        <include refid="selectFinVoucherVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFinVoucher" parameterType="FinVoucher" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_voucher
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="voucherNo != null and voucherNo != ''">voucher_no,</if>
+            <if test="periodCode != null and periodCode != ''">period_code,</if>
+            <if test="voucherDate != null">voucher_date,</if>
+            <if test="sourceType != null">source_type,</if>
+            <if test="sourceId != null">source_id,</if>
+            <if test="summary != null">summary,</if>
+            <if test="totalDebit != null">total_debit,</if>
+            <if test="totalCredit != null">total_credit,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="auditor != null">auditor,</if>
+            <if test="auditTime != null">audit_time,</if>
+            <if test="poster != null">poster,</if>
+            <if test="postTime != null">post_time,</if>
+            <if test="voucherMaker != null">voucher_maker,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="voucherNo != null and voucherNo != ''">#{voucherNo},</if>
+            <if test="periodCode != null and periodCode != ''">#{periodCode},</if>
+            <if test="voucherDate != null">#{voucherDate},</if>
+            <if test="sourceType != null">#{sourceType},</if>
+            <if test="sourceId != null">#{sourceId},</if>
+            <if test="summary != null">#{summary},</if>
+            <if test="totalDebit != null">#{totalDebit},</if>
+            <if test="totalCredit != null">#{totalCredit},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="auditor != null">#{auditor},</if>
+            <if test="auditTime != null">#{auditTime},</if>
+            <if test="poster != null">#{poster},</if>
+            <if test="postTime != null">#{postTime},</if>
+            <if test="voucherMaker != null">#{voucherMaker},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFinVoucher" parameterType="FinVoucher">
+        update fin_voucher
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="voucherNo != null and voucherNo != ''">voucher_no = #{voucherNo},</if>
+            <if test="periodCode != null and periodCode != ''">period_code = #{periodCode},</if>
+            <if test="voucherDate != null">voucher_date = #{voucherDate},</if>
+            <if test="sourceType != null">source_type = #{sourceType},</if>
+            <if test="sourceId != null">source_id = #{sourceId},</if>
+            <if test="summary != null">summary = #{summary},</if>
+            <if test="totalDebit != null">total_debit = #{totalDebit},</if>
+            <if test="totalCredit != null">total_credit = #{totalCredit},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="auditor != null">auditor = #{auditor},</if>
+            <if test="auditTime != null">audit_time = #{auditTime},</if>
+            <if test="poster != null">poster = #{poster},</if>
+            <if test="postTime != null">post_time = #{postTime},</if>
+            <if test="voucherMaker != null">voucher_maker = #{voucherMaker},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFinVoucherById" parameterType="Long">
+        delete from fin_voucher where id = #{id}
+    </delete>
+
+    <delete id="deleteFinVoucherByIds" parameterType="String">
+        delete from fin_voucher where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 取指定前缀(例 "记-202608-") 凭证号的最大流水号(后 4 位数字);无则 null -->
+    <select id="selectMaxVoucherNoSeq" parameterType="String" resultType="java.lang.Integer">
+        SELECT MAX(CAST(SUBSTRING(voucher_no, -4) AS UNSIGNED))
+        FROM fin_voucher
+        WHERE voucher_no LIKE CONCAT(#{prefix}, '%')
+    </select>
+
+    <!-- 报表:科目余额表(累计到指定期间) -->
+    <select id="sumEntriesBySubjectInPeriod" parameterType="String" resultType="java.util.Map">
+        SELECT e.subject_id AS subjectId,
+               SUM(e.debit_amount) AS debitTotal,
+               SUM(e.credit_amount) AS creditTotal
+        FROM fin_voucher_entry e
+        JOIN fin_voucher v ON e.voucher_id = v.id
+        WHERE v.period_code &lt;= #{periodCode} AND v.status IN ('1','2')
+        GROUP BY e.subject_id
+    </select>
+
+    <!-- 报表:单科目单期间发生额(差额) -->
+    <select id="sumBySubjectPeriod" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(e.debit_amount), 0) - COALESCE(SUM(e.credit_amount), 0)
+        FROM fin_voucher_entry e
+        JOIN fin_voucher v ON e.voucher_id = v.id
+        WHERE v.period_code = #{periodCode} AND v.status IN ('1','2') AND e.subject_id = #{subjectId}
+    </select>
+
+    <!-- 报表:单科目单期间借方/贷方分别聚合 -->
+    <select id="sumDebitCreditBySubjectPeriod" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT SUM(e.debit_amount) AS debitTotal,
+               SUM(e.credit_amount) AS creditTotal
+        FROM fin_voucher_entry e
+        JOIN fin_voucher v ON e.voucher_id = v.id
+        WHERE v.period_code = #{periodCode} AND v.status IN ('1','2') AND e.subject_id = #{subjectId}
+    </select>
+
+    <!-- 报表:单科目期末余额(累计到指定期间) -->
+    <select id="getSubjectBalance" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(e.debit_amount), 0) - COALESCE(SUM(e.credit_amount), 0)
+        FROM fin_voucher_entry e
+        JOIN fin_voucher v ON e.voucher_id = v.id
+        WHERE v.period_code &lt;= #{periodCode} AND v.status IN ('1','2') AND e.subject_id = #{subjectId}
+    </select>
+
+    <!-- 报表:台账业绩按渠道/险种/月份聚合 -->
+    <select id="sumLedgerPerformance" resultType="java.util.Map">
+        SELECT
+            channel_type AS channelType,
+            channel_name AS channelName,
+            IFNULL(insurance_type,'') AS insuranceType,
+            DATE_FORMAT(ledger_date, '%Y-%m') AS yearMonth,
+            COUNT(*) AS policyCount,
+            SUM(premium) AS premium,
+            SUM(up_commission) AS upCommission,
+            SUM(down_commission) AS downCommission,
+            SUM(profit) AS profit
+        FROM jonlink_insurance_ledger
+        WHERE ledger_date BETWEEN #{startDate} AND #{endDate}
+        GROUP BY channel_type, channel_name, insurance_type, DATE_FORMAT(ledger_date, '%Y-%m')
+        ORDER BY yearMonth DESC, channel_type
+    </select>
+</mapper>

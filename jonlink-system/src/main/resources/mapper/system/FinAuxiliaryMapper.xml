@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.FinAuxiliaryMapper">
+    
+    <resultMap type="FinAuxiliary" id="FinAuxiliaryResult">
+        <result property="id"    column="id"    />
+        <result property="auxType"    column="aux_type"    />
+        <result property="auxCode"    column="aux_code"    />
+        <result property="auxName"    column="aux_name"    />
+        <result property="status"    column="status"    />
+        <result property="remark"    column="remark"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectFinAuxiliaryVo">
+        select id, aux_type, aux_code, aux_name, status, remark, create_by, create_time, update_by, update_time
+        from fin_auxiliary
+    </sql>
+
+    <select id="selectFinAuxiliaryList" parameterType="FinAuxiliary" resultMap="FinAuxiliaryResult">
+        <include refid="selectFinAuxiliaryVo"/>
+        <where>  
+            <if test="auxType != null  and auxType != ''"> and aux_type = #{auxType}</if>
+            <if test="auxCode != null  and auxCode != ''"> and aux_code = #{auxCode}</if>
+            <if test="auxName != null  and auxName != ''"> and aux_name like concat('%', #{auxName}, '%')</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectFinAuxiliaryById" parameterType="Long" resultMap="FinAuxiliaryResult">
+        <include refid="selectFinAuxiliaryVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFinAuxiliary" parameterType="FinAuxiliary" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_auxiliary
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="auxType != null and auxType != ''">aux_type,</if>
+            <if test="auxCode != null and auxCode != ''">aux_code,</if>
+            <if test="auxName != null and auxName != ''">aux_name,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="auxType != null and auxType != ''">#{auxType},</if>
+            <if test="auxCode != null and auxCode != ''">#{auxCode},</if>
+            <if test="auxName != null and auxName != ''">#{auxName},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFinAuxiliary" parameterType="FinAuxiliary">
+        update fin_auxiliary
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="auxType != null and auxType != ''">aux_type = #{auxType},</if>
+            <if test="auxCode != null and auxCode != ''">aux_code = #{auxCode},</if>
+            <if test="auxName != null and auxName != ''">aux_name = #{auxName},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFinAuxiliaryById" parameterType="Long">
+        delete from fin_auxiliary where id = #{id}
+    </delete>
+
+    <delete id="deleteFinAuxiliaryByIds" parameterType="String">
+        delete from fin_auxiliary where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectFinAuxiliaryByType" parameterType="String" resultMap="FinAuxiliaryResult">
+        <include refid="selectFinAuxiliaryVo"/>
+        where aux_type = #{auxType} and status = '0'
+    </select>
+</mapper>

@@ -13,6 +13,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="carNo"    column="car_no"    />
         <result property="amount"    column="amount"    />
         <result property="orderType"    column="order_type"    />
+        <result property="sourceType"    column="source_type"    />
         <result property="status"    column="status"    />
         <result property="verifyStatus"    column="verify_status"    />
         <result property="verifyTime"    column="verify_time"    />
@@ -26,14 +27,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectWxBizOrderVo">
-        select id, order_no, phone, customer_name, service_type, car_no, amount, order_type, status, verify_status, verify_time, verify_msg, ext_json, remark, create_by, create_time, update_by, update_time from wx_biz_order
+        select id, order_no, phone, customer_name, service_type, car_no, amount, order_type, source_type, status, verify_status, verify_time, verify_msg, ext_json, remark, create_by, create_time, update_by, update_time from wx_biz_order
     </sql>
 
     <select id="selectWxBizOrderList" parameterType="WxBizOrder" resultMap="WxBizOrderResult">
         <include refid="selectWxBizOrderVo"/>
-        <where>  
+        <where>
             <if test="phone != null  and phone != ''"> and phone = #{phone}</if>
             <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="sourceType != null and sourceType != ''"> and source_type = #{sourceType}</if>
         </where>
     </select>
     
@@ -52,6 +54,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="carNo != null">car_no,</if>
             <if test="amount != null">amount,</if>
             <if test="orderType != null">order_type,</if>
+            <if test="sourceType != null">source_type,</if>
             <if test="status != null and status != ''">status,</if>
             <if test="verifyStatus != null and verifyStatus != ''">verify_status,</if>
             <if test="verifyTime != null">verify_time,</if>
@@ -71,6 +74,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="carNo != null">#{carNo},</if>
             <if test="amount != null">#{amount},</if>
             <if test="orderType != null">#{orderType},</if>
+            <if test="sourceType != null">#{sourceType},</if>
             <if test="status != null and status != ''">#{status},</if>
             <if test="verifyStatus != null and verifyStatus != ''">#{verifyStatus},</if>
             <if test="verifyTime != null">#{verifyTime},</if>
@@ -94,6 +98,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="carNo != null">car_no = #{carNo},</if>
             <if test="amount != null">amount = #{amount},</if>
             <if test="orderType != null">order_type = #{orderType},</if>
+            <if test="sourceType != null">source_type = #{sourceType},</if>
             <if test="status != null and status != ''">status = #{status},</if>
             <if test="verifyStatus != null and verifyStatus != ''">verify_status = #{verifyStatus},</if>
             <if test="verifyTime != null">verify_time = #{verifyTime},</if>
@@ -113,9 +118,31 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </delete>
 
     <delete id="deleteWxBizOrderByIds" parameterType="String">
-        delete from wx_biz_order where id in 
+        delete from wx_biz_order where id in
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>
     </delete>
+
+    <!-- 归档: 拉候选 -->
+    <select id="selectArchiveCandidates" resultMap="WxBizOrderResult">
+        <include refid="selectWxBizOrderVo"/>
+        where verify_status = '1'
+          and create_time &lt; date_sub(now(), interval #{days} day)
+        order by id asc
+        limit 500
+    </select>
+
+    <!-- 归档: 查台账 down_settle_status(IFNULL 防无此单返回 NULL) -->
+    <select id="selectLedgerDownSettleStatusByOrderNo" resultType="int">
+        select ifnull((select down_settle_status from jonlink_insurance_ledger where policy_no = #{orderNo} limit 1), -1)
+    </select>
+
+    <!-- 归档: INSERT archive + DELETE 主表(同事务) -->
+    <insert id="moveToArchive">
+        INSERT INTO wx_biz_order_archive
+        (id, order_no, phone, customer_name, service_type, car_no, amount, order_type, source_type, status, verify_status, verify_time, verify_msg, ext_json, remark, create_by, create_time, update_by, update_time)
+        SELECT id, order_no, phone, customer_name, service_type, car_no, amount, order_type, source_type, status, verify_status, verify_time, verify_msg, ext_json, remark, create_by, create_time, update_by, update_time
+        FROM wx_biz_order WHERE id = #{id}
+    </insert>
 </mapper>

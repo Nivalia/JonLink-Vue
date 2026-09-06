@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.WxDistFanMappingMapper">
+
+    <resultMap type="WxDistFanMapping" id="WxDistFanMappingResult">
+        <result property="id" column="id"/>
+        <result property="distUserId" column="dist_user_id"/>
+        <result property="fanOpenid" column="fan_openid"/>
+        <result property="fanPhone" column="fan_phone"/>
+        <result property="syncSource" column="sync_source"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectWxDistFanMappingVo">
+        select id, dist_user_id, fan_openid, fan_phone, sync_source, create_time, update_time
+        from wx_dist_fan_mapping
+    </sql>
+
+    <select id="selectWxDistFanMappingById" parameterType="Long" resultMap="WxDistFanMappingResult">
+        <include refid="selectWxDistFanMappingVo"/> where id = #{id}
+    </select>
+
+    <select id="selectWxDistFanMappingList" parameterType="WxDistFanMapping" resultMap="WxDistFanMappingResult">
+        <include refid="selectWxDistFanMappingVo"/>
+        <where>
+            <if test="distUserId != null"> and dist_user_id = #{distUserId}</if>
+            <if test="fanOpenid != null and fanOpenid != ''"> and fan_openid = #{fanOpenid}</if>
+            <if test="fanPhone != null and fanPhone != ''"> and fan_phone = #{fanPhone}</if>
+            <if test="syncSource != null and syncSource != ''"> and sync_source = #{syncSource}</if>
+        </where>
+    </select>
+
+    <select id="selectByDistAndOpenid" resultMap="WxDistFanMappingResult">
+        <include refid="selectWxDistFanMappingVo"/>
+        where dist_user_id = #{distUserId} and fan_openid = #{fanOpenid} limit 1
+    </select>
+
+    <select id="selectByDistUserId" parameterType="Long" resultMap="WxDistFanMappingResult">
+        <include refid="selectWxDistFanMappingVo"/> where dist_user_id = #{distUserId}
+    </select>
+
+    <select id="selectByFanOpenid" parameterType="String" resultMap="WxDistFanMappingResult">
+        <include refid="selectWxDistFanMappingVo"/> where fan_openid = #{fanOpenid}
+    </select>
+
+    <insert id="insertWxDistFanMapping" parameterType="WxDistFanMapping" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_dist_fan_mapping (dist_user_id, fan_openid, fan_phone, sync_source, create_time)
+        values (#{distUserId}, #{fanOpenid}, #{fanPhone}, #{syncSource}, sysdate())
+    </insert>
+
+    <insert id="insertOrUpdate" parameterType="WxDistFanMapping" useGeneratedKeys="true" keyProperty="id">
+        insert into wx_dist_fan_mapping (dist_user_id, fan_openid, fan_phone, sync_source, create_time)
+        values (#{distUserId}, #{fanOpenid}, #{fanPhone}, #{syncSource}, sysdate())
+        on duplicate key update
+            fan_phone = values(fan_phone),
+            sync_source = values(sync_source),
+            update_time = sysdate()
+    </insert>
+
+    <update id="updateWxDistFanMapping" parameterType="WxDistFanMapping">
+        update wx_dist_fan_mapping
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="fanPhone != null">fan_phone = #{fanPhone},</if>
+            <if test="syncSource != null and syncSource != ''">sync_source = #{syncSource},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteWxDistFanMappingById" parameterType="Long">
+        delete from wx_dist_fan_mapping where id = #{id}
+    </delete>
+
+    <delete id="deleteByDistAndOpenid">
+        delete from wx_dist_fan_mapping where dist_user_id = #{distUserId} and fan_openid = #{fanOpenid}
+    </delete>
+</mapper>

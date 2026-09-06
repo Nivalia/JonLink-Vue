@@ -43,12 +43,14 @@ spring:
                 enabled: true
             statViewServlet:
                 enabled: true
-                # 设置白名单，不填则允许所有访问
-                allow:
+                # [AUDIT-2026-09-04] 仅本机 127.0.0.1 允许访问 Druid 监控台
+                allow: 127.0.0.1
                 url-pattern: /druid/*
+                # [AUDIT-2026-09-04] 控制台密码从 env 读取,真生产必须用 env DRUID_PASSWORD 覆盖
+                # 当前默认值仅为本地开发占位;真生产用 `openssl rand -base64 16` 生成新密码
                 # 控制台管理用户名和密码
-                login-username: jonlink
-                login-password: 123456
+                login-username: ${DRUID_USERNAME:jonlink_local}
+                login-password: ${DRUID_PASSWORD:PLACEHOLDER_USE_ENV_VAR}
             filter:
                 stat:
                     enabled: true

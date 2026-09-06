@@ -3,12 +3,16 @@ package com.jonlink.system.wx.service;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import com.jonlink.common.utils.StringUtils;
 import com.jonlink.system.domain.WxBizOrder;
 import com.jonlink.system.domain.WxDistCommission;
 import com.jonlink.system.domain.WxDistMember;
+import com.jonlink.system.domain.WxFcConfig;
+import com.jonlink.system.service.IWxFcConfigService;
 import com.jonlink.system.domain.WxMpUser;
+import com.jonlink.system.domain.JonlinkInsuranceLedger;
 import com.jonlink.system.mapper.WxBizMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +41,8 @@ public class WxVerifyService
     private WxLedgerService wxLedgerService;
     @Autowired
     private WxMsgRuleExecutor ruleExecutor;
+    @Autowired
+    private IWxFcConfigService wxFcConfigService;
 
     /**
      * 核销接口。
@@ -47,12 +53,24 @@ public class WxVerifyService
      * @param amount 核销金额(核销要素)
      * @return {ok, code, msg} code: VERIFIED已核销 / NOT_FOUND不存在 / MISMATCH要素不符 / OK成功
      */
-    @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> verify(String orderNo, String phone, String carNo, BigDecimal amount)
+    {
+        return verify(orderNo, phone, carNo, amount, null);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> verify(String orderNo, String phone, String carNo, BigDecimal amount, String extJson)
     {
         if (StringUtils.isEmpty(orderNo))
         {
             return Map.of("ok", false, "code", "BAD_PARAM", "msg", "订单号不能为空");
+        }
+        // 0. 必填项校验(从 wx_fc_config 拉 required=1 visible=1,前后端双重)
+        Map<String, Object> extMap = parseExtJson(extJson);
+        String missing = checkRequiredFields(extMap, phone, carNo, amount);
+        if (missing != null)
+        {
+            return Map.of("ok", false, "code", "REQUIRED_MISSING", "msg", "必填项缺失: " + missing);
         }
         // 1. 查单
         WxBizOrder order = wxBizMapper.selectOrderByNo(orderNo);
@@ -79,6 +97,10 @@ public class WxVerifyService
         order.setVerifyStatus("1");
         order.setVerifyTime(new Date());
         order.setVerifyMsg("核销成功");
+        if (extJson != null && !extJson.isEmpty())
+        {
+            order.setExtJson(extJson);
+        }
         order.setUpdateTime(new Date());
         wxBizMapper.updateOrderVerify(order);
         log.info("[verify] 核销成功: order={} phone={} amount={}", orderNo, order.getPhone(), order.getAmount());
@@ -86,6 +108,22 @@ public class WxVerifyService
         // 5. 同事务: 电子台账核销流水
         wxLedgerService.write(WxLedgerService.TYPE_VERIFY, orderNo, order.getPhone(), null,
                 order.getAmount(), BigDecimal.ZERO, "2", "订单核销");
+
+        // 5.5 同事务: 台账回写(若 orderNo 匹配 jonlink_insurance_ledger.policy_no) → 下游结费状态=已结 + 写入结算单号
+        try
+        {
+            JonlinkInsuranceLedger matched = wxBizMapper.selectLedgerByPolicyNo(orderNo);
+            if (matched != null)
+            {
+                String settleNo = "D" + new java.text.SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) + (int)(Math.random() * 900 + 100);
+                int n = wxBizMapper.updateLedgerSettle(matched.getId(), "1", "1", settleNo);
+                if (n > 0) log.info("[verify] 台账回写成功: ledgerId={} downSettleNo={}", matched.getId(), settleNo);
+            }
+        }
+        catch (Exception e)
+        {
+            log.warn("[verify] 台账回写失败(不影响核销): {}", e.getMessage());
+        }
 
         // 6. 同事务: 分销佣金入账 (R9: 100% 直接上级)
         creditCommission(order);
@@ -160,5 +198,63 @@ public class WxVerifyService
         wxLedgerService.write(WxLedgerService.TYPE_DIST, ledgerBizNo, order.getPhone(), customer.getOpenid(),
                 commission, commission, "1", "核销佣金入账(直接上级)");
         log.info("[dist] 佣金入账: order={} beneficiary={} amt={}", order.getOrderNo(), dist.getUserName(), commission);
+    }
+
+    private Map<String, Object> parseExtJson(String extJson)
+    {
+        if (extJson == null || extJson.isEmpty())
+        {
+            return new HashMap<>();
+        }
+        try
+        {
+            return com.alibaba.fastjson2.JSON.parseObject(extJson, Map.class);
+        }
+        catch (Exception e)
+        {
+            return new HashMap<>();
+        }
+    }
+
+    private String checkRequiredFields(Map<String, Object> extMap, String phone, String carNo, BigDecimal amount)
+    {
+        try
+        {
+            List<WxFcConfig> cfgs = wxFcConfigService.selectWxFcConfigForRender("0");
+            for (WxFcConfig c : cfgs)
+            {
+                if (!"1".equals(c.getVisible()) || !"1".equals(c.getRequired()))
+                {
+                    continue;
+                }
+                String key = c.getFieldKey();
+                boolean empty;
+                switch (key)
+                {
+                    case "phone":
+                        empty = StringUtils.isEmpty(phone);
+                        break;
+                    case "car_no":
+                        empty = StringUtils.isEmpty(carNo);
+                        break;
+                    case "amount":
+                        empty = (amount == null);
+                        break;
+                    default:
+                        Object v = extMap.get(key);
+                        empty = (v == null || String.valueOf(v).trim().isEmpty());
+                        break;
+                }
+                if (empty)
+                {
+                    return c.getFieldLabel();
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            log.warn("[verify] 必填项校验失败(放行): {}", e.getMessage());
+        }
+        return null;
     }
 }

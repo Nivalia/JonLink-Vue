@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.FinSubjectMapper">
+    
+    <resultMap type="FinSubject" id="FinSubjectResult">
+        <result property="id"    column="id"    />
+        <result property="parentId"    column="parent_id"    />
+        <result property="subjectCode"    column="subject_code"    />
+        <result property="subjectName"    column="subject_name"    />
+        <result property="subjectType"    column="subject_type"    />
+        <result property="balanceDirection"    column="balance_direction"    />
+        <result property="isLeaf"    column="is_leaf"    />
+        <result property="status"    column="status"    />
+        <result property="remark"    column="remark"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectFinSubjectVo">
+        select id, parent_id, subject_code, subject_name, subject_type, balance_direction, is_leaf, status, remark, create_by, create_time, update_by, update_time from fin_subject
+    </sql>
+
+    <select id="selectFinSubjectList" parameterType="FinSubject" resultMap="FinSubjectResult">
+        <include refid="selectFinSubjectVo"/>
+        <where>  
+            <if test="parentId != null "> and parent_id = #{parentId}</if>
+            <if test="subjectCode != null  and subjectCode != ''"> and subject_code = #{subjectCode}</if>
+            <if test="subjectName != null  and subjectName != ''"> and subject_name like concat('%', #{subjectName}, '%')</if>
+            <if test="subjectType != null  and subjectType != ''"> and subject_type = #{subjectType}</if>
+            <if test="balanceDirection != null  and balanceDirection != ''"> and balance_direction = #{balanceDirection}</if>
+            <if test="isLeaf != null  and isLeaf != ''"> and is_leaf = #{isLeaf}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectFinSubjectById" parameterType="Long" resultMap="FinSubjectResult">
+        <include refid="selectFinSubjectVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectIdByCode" parameterType="String" resultType="Long">
+        select id from fin_subject where subject_code = #{subjectCode} and status = '1' and is_leaf = '1' limit 1
+    </select>
+
+    <resultMap id="SubjectMap" type="java.util.LinkedHashMap">
+        <result column="id" property="id" />
+        <result column="subject_code" property="subjectCode" />
+        <result column="subject_name" property="subjectName" />
+        <result column="subject_type" property="subjectType" />
+        <result column="balance_direction" property="balanceDirection" />
+    </resultMap>
+
+    <select id="listLeafSubjects" resultMap="SubjectMap">
+        select id, subject_code, subject_name, subject_type, balance_direction
+        from fin_subject
+        where status = '1' and is_leaf = '1'
+        order by subject_code
+    </select>
+
+    <select id="listBySubjectType" parameterType="String" resultMap="SubjectMap">
+        select id, subject_code, subject_name, subject_type, balance_direction
+        from fin_subject
+        where status = '1' and is_leaf = '1' and subject_type = #{subjectType}
+        order by subject_code
+    </select>
+
+    <select id="listLeafSubjectsByType" parameterType="String" resultMap="FinSubjectResult">
+        select id, parent_id, subject_code, subject_name, subject_type, balance_direction, is_leaf, status
+        from fin_subject
+        where status = '1' and is_leaf = '1' and subject_type = #{subjectType}
+        order by subject_code
+    </select>
+
+    <insert id="insertFinSubject" parameterType="FinSubject" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_subject
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="parentId != null">parent_id,</if>
+            <if test="subjectCode != null and subjectCode != ''">subject_code,</if>
+            <if test="subjectName != null and subjectName != ''">subject_name,</if>
+            <if test="subjectType != null and subjectType != ''">subject_type,</if>
+            <if test="balanceDirection != null and balanceDirection != ''">balance_direction,</if>
+            <if test="isLeaf != null and isLeaf != ''">is_leaf,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="parentId != null">#{parentId},</if>
+            <if test="subjectCode != null and subjectCode != ''">#{subjectCode},</if>
+            <if test="subjectName != null and subjectName != ''">#{subjectName},</if>
+            <if test="subjectType != null and subjectType != ''">#{subjectType},</if>
+            <if test="balanceDirection != null and balanceDirection != ''">#{balanceDirection},</if>
+            <if test="isLeaf != null and isLeaf != ''">#{isLeaf},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFinSubject" parameterType="FinSubject">
+        update fin_subject
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="subjectCode != null and subjectCode != ''">subject_code = #{subjectCode},</if>
+            <if test="subjectName != null and subjectName != ''">subject_name = #{subjectName},</if>
+            <if test="subjectType != null and subjectType != ''">subject_type = #{subjectType},</if>
+            <if test="balanceDirection != null and balanceDirection != ''">balance_direction = #{balanceDirection},</if>
+            <if test="isLeaf != null and isLeaf != ''">is_leaf = #{isLeaf},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFinSubjectById" parameterType="Long">
+        delete from fin_subject where id = #{id}
+    </delete>
+
+    <delete id="deleteFinSubjectByIds" parameterType="String">
+        delete from fin_subject where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

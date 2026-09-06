@@ -23,6 +23,12 @@
             <artifactId>jonlink-common</artifactId>
         </dependency>
 
+        <!-- 企业微信 SDK -->
+        <dependency>
+            <groupId>com.github.binarywang</groupId>
+            <artifactId>weixin-java-cp</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>

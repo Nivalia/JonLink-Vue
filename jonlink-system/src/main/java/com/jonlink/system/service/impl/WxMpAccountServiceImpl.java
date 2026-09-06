@@ -2,6 +2,7 @@ package com.jonlink.system.service.impl;
 
 import java.util.List;
 import com.jonlink.common.utils.DateUtils;
+import com.jonlink.common.utils.security.AesUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.jonlink.system.mapper.WxMpAccountMapper;
@@ -10,87 +11,96 @@ import com.jonlink.system.service.IWxMpAccountService;
 
 /**
  * 账号配置Service业务层处理
- * 
+ * - appSecret 入库前 AES 加密(已加密自动跳过),列表/详情查询脱敏(仅后 4 位)
+ *
  * @author jonlink
  * @date 2026-08-08
  */
 @Service
-public class WxMpAccountServiceImpl implements IWxMpAccountService 
+public class WxMpAccountServiceImpl implements IWxMpAccountService
 {
     @Autowired
     private WxMpAccountMapper wxMpAccountMapper;
 
-    /**
-     * 查询账号配置
-     * 
-     * @param id 账号配置主键
-     * @return 账号配置
-     */
     @Override
     public WxMpAccount selectWxMpAccountById(Long id)
     {
-        return wxMpAccountMapper.selectWxMpAccountById(id);
+        WxMpAccount a = wxMpAccountMapper.selectWxMpAccountById(id);
+        maskSecret(a);
+        return a;
     }
 
-    /**
-     * 查询账号配置列表
-     * 
-     * @param wxMpAccount 账号配置
-     * @return 账号配置
-     */
     @Override
     public List<WxMpAccount> selectWxMpAccountList(WxMpAccount wxMpAccount)
     {
-        return wxMpAccountMapper.selectWxMpAccountList(wxMpAccount);
+        List<WxMpAccount> list = wxMpAccountMapper.selectWxMpAccountList(wxMpAccount);
+        if (list != null)
+        {
+            list.forEach(this::maskSecret);
+        }
+        return list;
     }
 
-    /**
-     * 新增账号配置
-     * 
-     * @param wxMpAccount 账号配置
-     * @return 结果
-     */
     @Override
     public int insertWxMpAccount(WxMpAccount wxMpAccount)
     {
         wxMpAccount.setCreateTime(DateUtils.getNowDate());
+        encryptSecret(wxMpAccount);
         return wxMpAccountMapper.insertWxMpAccount(wxMpAccount);
     }
 
-    /**
-     * 修改账号配置
-     * 
-     * @param wxMpAccount 账号配置
-     * @return 结果
-     */
     @Override
     public int updateWxMpAccount(WxMpAccount wxMpAccount)
     {
         wxMpAccount.setUpdateTime(DateUtils.getNowDate());
+        // 编辑时: 前端若保留原值(以 "****xxxx" 形式),视为不覆盖
+        if (wxMpAccount.getAppSecret() != null && wxMpAccount.getAppSecret().startsWith("****"))
+        {
+            wxMpAccount.setAppSecret(null);
+        }
+        else if (wxMpAccount.getAppSecret() != null && !wxMpAccount.getAppSecret().isEmpty())
+        {
+            encryptSecret(wxMpAccount);
+        }
         return wxMpAccountMapper.updateWxMpAccount(wxMpAccount);
     }
 
-    /**
-     * 批量删除账号配置
-     * 
-     * @param ids 需要删除的账号配置主键
-     * @return 结果
-     */
     @Override
     public int deleteWxMpAccountByIds(Long[] ids)
     {
         return wxMpAccountMapper.deleteWxMpAccountByIds(ids);
     }
 
-    /**
-     * 删除账号配置信息
-     * 
-     * @param id 账号配置主键
-     * @return 结果
-     */
     @Override
     public int deleteWxMpAccountById(Long id)
     {
         return wxMpAccountMapper.deleteWxMpAccountById(id);
+    }
+
+    /** 入库前加密(空值不加密,已带 "AES:" 前缀视为已加密跳过) */
+    private void encryptSecret(WxMpAccount a)
+    {
+        if (a.getAppSecret() == null || a.getAppSecret().isEmpty())
+        {
+            return;
+        }
+        a.setAppSecret(AesUtils.encrypt(a.getAppSecret()));
+    }
+
+    /** 读出后脱敏(避免明文回显) */
+    private void maskSecret(WxMpAccount a)
+    {
+        if (a == null || a.getAppSecret() == null || a.getAppSecret().isEmpty())
+        {
+            return;
+        }
+        try
+        {
+            a.setAppSecret(AesUtils.mask(a.getAppSecret()));
+        }
+        catch (Exception e)
+        {
+            a.setAppSecret("****");
+        }
     }
 }

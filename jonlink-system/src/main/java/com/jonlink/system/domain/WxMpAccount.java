@@ -21,11 +21,11 @@ public class WxMpAccount extends BaseEntity
     private Long id;
 
     /** 公众号 AppID */
-    @Excel(name = "公众号 AppID")
+    @Excel(name = "AppID")
     private String appId;
 
     /** AppSecret(加密存储) */
-    @Excel(name = "AppSecret(加密存储)")
+    @Excel(name = "AppSecret")
     private String appSecret;
 
     /** 公众号名称 */
@@ -33,28 +33,28 @@ public class WxMpAccount extends BaseEntity
     private String name;
 
     /** 服务器配置Token(验签) */
-    @Excel(name = "服务器配置Token(验签)")
+    @Excel(name = "Token")
     private String token;
 
     /** 消息加密密钥(可空) */
-    @Excel(name = "消息加密密钥(可空)")
+    @Excel(name = "加密密钥")
     private String encodingAesKey;
 
     /** 加密模式 0明文 1加密 */
-    @Excel(name = "加密模式 0明文 1加密")
+    @Excel(name = "加密模式")
     private String encryptMode;
 
     /** 缓存的access_token */
-    @Excel(name = "缓存的access_token")
+    @Excel(name = "access_token")
     private String accessToken;
 
     /** access_token过期时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "access_token过期时间", width = 30, dateFormat = "yyyy-MM-dd")
+    @Excel(name = "过期时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date tokenExpireTime;
 
     /** 状态 0停用 1启用 */
-    @Excel(name = "状态 0停用 1启用")
+    @Excel(name = "状态")
     private String status;
 
     public void setId(Long id) 

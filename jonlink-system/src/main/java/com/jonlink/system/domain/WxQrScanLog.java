@@ -21,23 +21,23 @@ public class WxQrScanLog extends BaseEntity
     private Long id;
 
     /** scene值 */
-    @Excel(name = "scene值")
+    @Excel(name = "scene")
     private Long sceneId;
 
     /** 0分销 1活动 2通知 3公告 */
-    @Excel(name = "0分销 1活动 2通知 3公告")
+    @Excel(name = "类型")
     private String bizType;
 
     /** 场景串(临时码) */
-    @Excel(name = "场景串(临时码)")
+    @Excel(name = "场景串")
     private String sceneStr;
 
     /** 扫码粉丝openid */
-    @Excel(name = "扫码粉丝openid")
+    @Excel(name = "openid")
     private String openid;
 
     /** 是否本次扫码新关注 0否 1是 */
-    @Excel(name = "是否本次扫码新关注 0否 1是")
+    @Excel(name = "是否新关注")
     private String isNewFollow;
 
     /** 扫码时间 */

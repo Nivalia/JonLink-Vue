@@ -173,11 +173,12 @@
     </insert>
 
     <select id="selectProductJoin" parameterType="Long" resultMap="JonlinkProductResult">
-        select p.*, c.company_name, ct.contact_name, ct.phone as contact_phone, t.type_name
+        select p.*, c.company_name, ct.contact_name, ct.phone as contact_phone, t.type_name, ch.channel_name
         from jonlink_product p
         left join jonlink_insurance_company c on p.company_id = c.id
         left join jonlink_contact_person ct on p.contact_id = ct.id
         left join jonlink_insurance_type t on p.type_id = t.id
+        left join jonlink_channel ch on p.channel_id = ch.id
         where p.id = #{id}
     </select>
 
@@ -265,13 +266,22 @@
         where id = #{id}
     </update>
 
+    <select id="selectLedgerByPolicyNo" resultType="com.jonlink.system.domain.JonlinkInsuranceLedger">
+        select id, ledger_date, channel_type, channel_ref, channel_name, policy_no, product_id, product_name,
+               insurance_type, insurance_company, applicant, insured, premium, tax_flag, up_rate, down_rate,
+               up_channel, down_commission, up_commission, net_fee, profit, up_settle_status, down_settle_status,
+               up_settle_no, down_settle_no, remark, create_by, create_time, update_by, update_time
+        from jonlink_insurance_ledger
+        where policy_no = #{policyNo} limit 1
+    </select>
+
     <update id="updateOrderSettled" parameterType="Long">
         update wx_biz_order set status = '1', update_time = sysdate() where id = #{id}
     </update>
 
     <update id="updateOrderVerify" parameterType="WxBizOrder">
         update wx_biz_order set verify_status = #{verifyStatus}, verify_time = #{verifyTime},
-            verify_msg = #{verifyMsg}, update_time = sysdate() where id = #{id}
+            verify_msg = #{verifyMsg}, ext_json = #{extJson}, update_time = sysdate() where id = #{id}
     </update>
 
     <update id="updateUserDistributor">
@@ -294,10 +304,18 @@
 
     <insert id="insertTemplate" parameterType="WxMpTemplate" useGeneratedKeys="true" keyProperty="id">
         insert into wx_mp_template (template_id, template_id_short, title, content, keyword_order,
-            primary_industry, deputy_industry, example, status, create_by, create_time, remark)
+            primary_industry, deputy_industry, example, keyword_meta, status, create_by, create_time, remark)
         values (#{templateId}, #{templateIdShort}, #{title}, #{content}, #{keywordOrder},
-            #{primaryIndustry}, #{deputyIndustry}, #{example}, #{status}, 'SYSTEM', sysdate(), #{remark})
+            #{primaryIndustry}, #{deputyIndustry}, #{example}, #{keywordMeta}, #{status}, 'SYSTEM', sysdate(), #{remark})
     </insert>
+
+    <select id="selectWxBizOrderByOrderNo" parameterType="String" resultType="com.jonlink.system.domain.WxBizOrder">
+        select id, order_no, phone, customer_name, service_type, car_no, amount, order_type, source_type,
+               status, verify_status, verify_time, verify_msg, ext_json, remark,
+               create_by, create_time, update_by, update_time
+        from wx_biz_order
+        where order_no = #{orderNo} limit 1
+    </select>
 
 
     <!-- ============ 公众号数据大屏 ============ -->
@@ -436,5 +454,42 @@
                date_format(subscribe_time,'%Y-%m-%d') as subscribe_date
         from wx_mp_user
         where openid = #{openid} limit 1
+    </select>
+
+    <update id="updateUserActivity">
+        update wx_mp_user
+        set activity_count = activity_count + 1,
+            last_activity_time = #{now},
+            activity_level = #{activityLevel},
+            update_time = sysdate()
+        where id = #{id}
+    </update>
+
+    <!-- ============ 统一首页看板 ============ -->
+    <!-- 粉丝来源统计 -->
+    <select id="dashboardFanSource" resultType="map">
+        select ifnull(bind_source, '未知') as name, count(*) as cnt
+        from wx_mp_user
+        group by bind_source
+        order by cnt desc
+    </select>
+
+    <!-- 用户画像(性别) -->
+    <select id="dashboardUserPortrait" resultType="map">
+        select
+            (select count(*) from wx_mp_user where sex = '1') as male,
+            (select count(*) from wx_mp_user where sex = '2') as female,
+            (select count(*) from wx_mp_user where sex is null or sex = '' or sex = '0') as unknown
+        from dual
+    </select>
+
+    <!-- 公众号矩阵 -->
+    <select id="dashboardMpMatrix" resultType="map">
+        select id, name as app_name, app_id,
+            case status when '1' then '已启用' when '0' then '已停用' else '未知' end as status_name,
+            status,
+            date_format(create_time,'%Y-%m-%d') as create_date
+        from wx_mp_account
+        order by status desc, id
     </select>
 </mapper>

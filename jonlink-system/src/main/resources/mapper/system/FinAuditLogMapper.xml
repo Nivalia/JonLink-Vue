@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.FinAuditLogMapper">
+
+	<resultMap type="FinAuditLog" id="FinAuditLogResult">
+		<id     property="id"            column="id"             />
+		<result property="module"        column="module"         />
+		<result property="action"        column="action"         />
+		<result property="targetId"      column="target_id"      />
+		<result property="targetNo"      column="target_no"      />
+		<result property="detail"        column="detail"         />
+		<result property="operator"      column="operator"       />
+		<result property="operateTime"   column="operate_time"   />
+		<result property="ipAddress"     column="ip_address"     />
+		<result property="remark"        column="remark"         />
+		<result property="createBy"      column="create_by"      />
+		<result property="createTime"    column="create_time"    />
+		<result property="updateBy"      column="update_by"      />
+		<result property="updateTime"    column="update_time"    />
+	</resultMap>
+
+	<sql id="selectAuditLogVo">
+        select id, module, action, target_id, target_no, detail, operator, operate_time, ip_address, remark, create_by, create_time, update_by, update_time
+        from fin_audit_log
+    </sql>
+    
+	<insert id="insertFinAuditLog" parameterType="FinAuditLog">
+		insert into fin_audit_log(module, action, target_id, target_no, detail, operator, operate_time, ip_address, remark, create_by, create_time)
+        values (#{module}, #{action}, #{targetId}, #{targetNo}, #{detail}, #{operator}, #{operateTime}, #{ipAddress}, #{remark}, #{createBy}, sysdate())
+	</insert>
+	
+	<select id="selectFinAuditLogList" parameterType="FinAuditLog" resultMap="FinAuditLogResult">
+		<include refid="selectAuditLogVo"/>
+		<where>
+			<if test="module != null and module != ''">
+				AND module = #{module}
+			</if>
+			<if test="action != null and action != ''">
+				AND action = #{action}
+			</if>
+			<if test="targetId != null">
+				AND target_id = #{targetId}
+			</if>
+			<if test="targetNo != null and targetNo != ''">
+				AND target_no like concat('%', #{targetNo}, '%')
+			</if>
+			<if test="operator != null and operator != ''">
+				AND operator like concat('%', #{operator}, '%')
+			</if>
+			<if test="ipAddress != null and ipAddress != ''">
+				AND ip_address like concat('%', #{ipAddress}, '%')
+			</if>
+			<if test="params.beginTime != null and params.beginTime != ''">
+				AND operate_time &gt;= #{params.beginTime}
+			</if>
+			<if test="params.endTime != null and params.endTime != ''">
+				AND operate_time &lt;= #{params.endTime}
+			</if>
+		</where>
+		order by id desc
+	</select>
+	
+	<select id="selectFinAuditLogById" parameterType="Long" resultMap="FinAuditLogResult">
+		<include refid="selectAuditLogVo"/>
+		where id = #{id}
+	</select>
+	
+	<update id="updateFinAuditLog" parameterType="FinAuditLog">
+		update fin_audit_log
+		<set>
+			<if test="module != null">module = #{module},</if>
+			<if test="action != null">action = #{action},</if>
+			<if test="targetId != null">target_id = #{targetId},</if>
+			<if test="targetNo != null">target_no = #{targetNo},</if>
+			<if test="detail != null">detail = #{detail},</if>
+			<if test="operator != null">operator = #{operator},</if>
+			<if test="operateTime != null">operate_time = #{operateTime},</if>
+			<if test="ipAddress != null">ip_address = #{ipAddress},</if>
+			<if test="remark != null">remark = #{remark},</if>
+			<if test="updateBy != null">update_by = #{updateBy},</if>
+			update_time = sysdate()
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="deleteFinAuditLogById" parameterType="Long">
+ 		delete from fin_audit_log where id = #{id}
+ 	</delete>
+ 	
+ 	<delete id="deleteFinAuditLogByIds" parameterType="Long">
+ 		delete from fin_audit_log where id in
+ 		<foreach collection="array" item="id" open="(" separator="," close=")">
+ 			#{id}
+        </foreach> 
+ 	</delete>
+
+</mapper>

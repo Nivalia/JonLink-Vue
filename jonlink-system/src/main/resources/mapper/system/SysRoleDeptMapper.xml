@@ -31,4 +31,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		</foreach>
 	</insert>
 	
+	<select id="selectRoleDeptByRoleId" parameterType="Long" resultMap="SysRoleDeptResult">
+		select role_id, dept_id from sys_role_dept where role_id = #{roleId}
+	</select>
+	
 </mapper> 

@@ -22,11 +22,11 @@ public class WxBizOrder extends BaseEntity
     private Long id;
 
     /** 订单号(唯一) */
-    @Excel(name = "订单号(唯一)")
+    @Excel(name = "订单号")
     private String orderNo;
 
     /** 手机号(与粉丝表关联,索引) */
-    @Excel(name = "手机号(与粉丝表关联,索引)")
+    @Excel(name = "手机号")
     private String phone;
 
     /** 客户名称 */
@@ -34,27 +34,31 @@ public class WxBizOrder extends BaseEntity
     private String customerName;
 
     /** 服务/项目类型 */
-    @Excel(name = "服务/项目类型")
+    @Excel(name = "服务类型")
     private String serviceType;
 
     /** 车牌号(核销要素) */
-    @Excel(name = "车牌号(核销要素)")
+    @Excel(name = "车牌号")
     private String carNo;
 
     /** 佣金/金额(核销要素) */
-    @Excel(name = "佣金/金额(核销要素)")
+    @Excel(name = "佣金")
     private BigDecimal amount;
 
     /** 类型(字典) */
-    @Excel(name = "类型(字典)")
+    @Excel(name = "类型")
     private String orderType;
 
+    /** 数据来源 0手工 1Excel导入 2台账同步 */
+    @Excel(name = "数据来源")
+    private String sourceType;
+
     /** 结算状态 0未结算 1已结算 */
-    @Excel(name = "结算状态 0未结算 1已结算")
+    @Excel(name = "结算状态")
     private String status;
 
     /** 核销状态(模板推送校验) 0未核销 1已核销 */
-    @Excel(name = "核销状态(模板推送校验) 0未核销 1已核销")
+    @Excel(name = "核销状态")
     private String verifyStatus;
 
     /** 核销时间 */
@@ -63,11 +67,11 @@ public class WxBizOrder extends BaseEntity
     private Date verifyTime;
 
     /** 核销结果(成功/失败原因) */
-    @Excel(name = "核销结果(成功/失败原因)")
+    @Excel(name = "核销结果")
     private String verifyMsg;
 
     /** 自定义扩展字段(JSON键值) */
-    @Excel(name = "自定义扩展字段(JSON键值)")
+    @Excel(name = "扩展字段")
     private String extJson;
 
     public void setId(Long id) 
@@ -145,12 +149,22 @@ public class WxBizOrder extends BaseEntity
         this.orderType = orderType;
     }
 
-    public String getOrderType() 
+    public String getOrderType()
     {
         return orderType;
     }
 
-    public void setStatus(String status) 
+    public void setSourceType(String sourceType)
+    {
+        this.sourceType = sourceType;
+    }
+
+    public String getSourceType()
+    {
+        return sourceType;
+    }
+
+    public void setStatus(String status)
     {
         this.status = status;
     }

@@ -9,10 +9,12 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.jonlink.common.utils.DateUtils;
 import com.jonlink.common.utils.StringUtils;
+import com.jonlink.system.domain.WxH5Page;
 import com.jonlink.system.domain.WxMpTemplate;
 import com.jonlink.system.domain.WxMpTemplateMsg;
 import com.jonlink.system.domain.WxMpUser;
 import com.jonlink.system.mapper.WxBizMapper;
+import com.jonlink.system.mapper.WxMpTemplateMapper;
 import com.jonlink.system.mapper.WxMpTemplateMsgMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +47,8 @@ public class WxMsgPushService
     private WxBizMapper wxBizMapper;
     @Autowired
     private WxMpTemplateMsgMapper wxMpTemplateMsgMapper;
+    @Autowired
+    private WxMpTemplateMapper wxMpTemplateMapper;
     @Autowired
     private WxMpService wxMpService;
     @Autowired
@@ -121,9 +125,10 @@ public class WxMsgPushService
             return Map.of("ok", false, "status", status, "msg", "当日已达上限，已转待发");
         }
         // 4. 调微信
-        Map<String, Object> r = wxMpService.sendTemplateMsg(openid, templateId, data, url);
+        String finalUrl = resolveTemplateUrl(templateId, url, phone);
+        Map<String, Object> r = wxMpService.sendTemplateMsg(openid, templateId, data, finalUrl);
         boolean ok = (Boolean) r.get("ok");
-        saveMsg(openid, phone, templateId, data, url, bizNo, bizType,
+        saveMsg(openid, phone, templateId, data, finalUrl, bizNo, bizType,
                 ok ? STATUS_SUCCESS : STATUS_FAIL, ok ? String.valueOf(r.get("msgid")) : null,
                 ok ? null : String.valueOf(r.get("err")));
         // 5. 台账流水(类型3推送, 中性)
@@ -139,6 +144,66 @@ public class WxMsgPushService
         return Map.of("ok", ok, "status", status, "msg", ok ? "推送成功" : "推送失败(已记录)");
     }
 
+    @Autowired
+    private com.jonlink.system.mapper.WxH5PageMapper wxH5PageMapper;
+
+    /**
+     * 链接兜底: 调用方传入的 url 优先;为空时按模板配置拼装(关联H5 / 自定义URL),支持 {ticket} 占位。
+     */
+    private String resolveTemplateUrl(String templateId, String url, String phone)
+    {
+        if (StringUtils.isNotEmpty(url))
+        {
+            return replaceTicket(url, phone);
+        }
+        try
+        {
+            WxMpTemplate tpl = wxMpTemplateMapper.selectWxMpTemplateByTemplateId(templateId);
+            if (tpl == null)
+            {
+                return null;
+            }
+            String urlType = tpl.getUrlType();
+            if ("1".equals(urlType) && tpl.getH5PageId() != null)
+            {
+                WxH5Page page = wxH5PageMapper.selectWxH5PageById(tpl.getH5PageId());
+                if (page != null)
+                {
+                    String ticket = genTicket(phone, tpl.getH5PageId());
+                    return replaceTicket(page.getPagePath(), phone) + "?ticket=" + ticket;
+                }
+            }
+            else if ("2".equals(urlType) && StringUtils.isNotEmpty(tpl.getCustomUrl()))
+            {
+                return replaceTicket(tpl.getCustomUrl(), phone);
+            }
+        }
+        catch (Exception e)
+        {
+            log.warn("[push] 解析模板链接失败 tpl={}: {}", templateId, e.getMessage());
+        }
+        return null;
+    }
+
+    private String replaceTicket(String url, String phone)
+    {
+        if (url == null)
+        {
+            return null;
+        }
+        if (url.contains("{ticket}"))
+        {
+            return url.replace("{ticket}", genTicket(phone, null));
+        }
+        return url;
+    }
+
+    private String genTicket(String phone, Long pageId)
+    {
+        String raw = (phone == null ? "" : phone) + ":" + System.currentTimeMillis() + ":" + (pageId == null ? 0 : pageId);
+        return java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(raw.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
     private WxMpTemplateMsg selectByBizNo(String bizNo)
     {
         return wxBizMapper.selectMsgByBizId(bizNo);
@@ -149,7 +214,7 @@ public class WxMsgPushService
     {
         WxMpTemplateMsg m = new WxMpTemplateMsg();
         m.setBatchNo("S" + DateUtils.dateTimeNow("yyyyMMddHHmmss"));
-        m.setTransposeNo(bizNo == null ? UUID.randomUUID().toString().replace("-", "") : bizNo);
+        m.setTransposeNo(StringUtils.isEmpty(bizNo) ? UUID.randomUUID().toString().replace("-", "") : bizNo);
         m.setOpenid(openid);
         m.setPhone(phone);
         m.setTemplateId(templateId);

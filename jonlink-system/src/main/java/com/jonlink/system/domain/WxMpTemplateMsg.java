@@ -21,19 +21,19 @@ public class WxMpTemplateMsg extends BaseEntity
     private Long id;
 
     /** 批次号(手工/导入) */
-    @Excel(name = "批次号(手工/导入)")
+    @Excel(name = "批次号")
     private String batchNo;
 
     /** 业务流水号(幂等,去重) */
-    @Excel(name = "业务流水号(幂等,去重)")
+    @Excel(name = "业务流水号")
     private String transposeNo;
 
     /** 接收openid */
-    @Excel(name = "接收openid")
+    @Excel(name = "openid")
     private String openid;
 
     /** 手机号(冗余冗余,便于查询) */
-    @Excel(name = "手机号(冗余冗余,便于查询)")
+    @Excel(name = "手机号")
     private String phone;
 
     /** 模板ID */
@@ -41,31 +41,37 @@ public class WxMpTemplateMsg extends BaseEntity
     private String templateId;
 
     /** 点击跳转链接 */
-    @Excel(name = "点击跳转链接")
+    @Excel(name = "跳转链接")
     private String url;
 
     /** 关键词值 JSON(按模板keyword_order顺序) */
-    @Excel(name = "关键词值 JSON(按模板keyword_order顺序)")
+    @Excel(name = "关键词值")
     private String keywords;
 
     /** 微信返回的msgid */
-    @Excel(name = "微信返回的msgid")
+    @Excel(name = "msgid")
     private String msgId;
 
     /** 0待发 1成功 2失败 3超限待发(次日补) 4逾期放弃 5未找到粉丝 */
-    @Excel(name = "0待发 1成功 2失败 3超限待发(次日补) 4逾期放弃 5未找到粉丝")
+    @Excel(name = "状态")
     private String status;
 
+    private String checkStatus;
+
+    private String checkDiff;
+
+    private Date checkTime;
+
     /** 错误信息(失败原因) */
-    @Excel(name = "错误信息(失败原因)")
+    @Excel(name = "错误信息")
     private String errMsg;
 
     /** 0业务触发 1手工/导入 2合并汇总 */
-    @Excel(name = "0业务触发 1手工/导入 2合并汇总")
+    @Excel(name = "来源")
     private String source;
 
     /** 业务类型(ORDER_NOTIFY等) */
-    @Excel(name = "业务类型(ORDER_NOTIFY等)")
+    @Excel(name = "业务类型")
     private String bizType;
 
     /** 业务单号 */
@@ -73,16 +79,16 @@ public class WxMpTemplateMsg extends BaseEntity
     private String bizId;
 
     /** 批次内行号(定位失败行) */
-    @Excel(name = "批次内行号(定位失败行)")
+    @Excel(name = "行号")
     private Long rowNo;
 
     /** 合并组ID(多条合并为1条时的关联) */
-    @Excel(name = "合并组ID(多条合并为1条时的关联)")
+    @Excel(name = "合并组ID")
     private Long groupId;
 
     /** 实际发送时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "实际发送时间", width = 30, dateFormat = "yyyy-MM-dd")
+    @Excel(name = "发送时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date sendTime;
 
     public void setId(Long id) 
@@ -175,14 +181,44 @@ public class WxMpTemplateMsg extends BaseEntity
         return msgId;
     }
 
-    public void setStatus(String status) 
+    public void setStatus(String status)
     {
         this.status = status;
     }
 
-    public String getStatus() 
+    public String getStatus()
     {
         return status;
+    }
+
+    public void setCheckStatus(String checkStatus)
+    {
+        this.checkStatus = checkStatus;
+    }
+
+    public String getCheckStatus()
+    {
+        return checkStatus;
+    }
+
+    public void setCheckDiff(String checkDiff)
+    {
+        this.checkDiff = checkDiff;
+    }
+
+    public String getCheckDiff()
+    {
+        return checkDiff;
+    }
+
+    public void setCheckTime(Date checkTime)
+    {
+        this.checkTime = checkTime;
+    }
+
+    public Date getCheckTime()
+    {
+        return checkTime;
     }
 
     public void setErrMsg(String errMsg) 

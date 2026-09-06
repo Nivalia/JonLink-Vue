@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.FinPayableMapper">
+    
+    <resultMap type="FinPayable" id="FinPayableResult">
+        <result property="id"    column="id"    />
+        <result property="docNo"    column="doc_no"    />
+        <result property="partnerId"    column="partner_id"    />
+        <result property="bizType"    column="biz_type"    />
+        <result property="sourceType"    column="source_type"    />
+        <result property="sourceId"    column="source_id"    />
+        <result property="amount"    column="amount"    />
+        <result property="paidAmount"    column="paid_amount"    />
+        <result property="remainAmount"    column="remain_amount"    />
+        <result property="dueDate"    column="due_date"    />
+        <result property="status"    column="status"    />
+        <result property="voucherId"    column="voucher_id"    />
+        <result property="remark"    column="remark"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    
+        <result property="partnerName"    column="partner_name"    />
+        <result property="voucherNo"    column="voucher_no"    />
+        <result property="sourceNo"    column="source_no"    />
+    </resultMap>
+
+    <sql id="selectFinPayableVo">        select pb.*
+        , p.partner_name AS partner_name
+        , v.voucher_no AS voucher_no
+        , '' AS source_no from fin_payable pb
+        LEFT JOIN fin_partner p ON pb.partner_id = p.id
+        LEFT JOIN fin_voucher v ON pb.voucher_id = v.id
+    </sql>
+
+    <select id="selectFinPayableList" parameterType="FinPayable" resultMap="FinPayableResult">
+        <include refid="selectFinPayableVo"/>
+        <where>  
+            <if test="docNo != null  and docNo != ''"> and pb.doc_no = #{docNo}</if>
+            <if test="partnerId != null "> and pb.partner_id = #{partnerId}</if>
+            <if test="bizType != null  and bizType != ''"> and pb.biz_type = #{bizType}</if>
+            <if test="sourceType != null  and sourceType != ''"> and source_type = #{sourceType}</if>
+            <if test="sourceId != null "> and pb.source_id = #{sourceId}</if>
+            <if test="amount != null "> and pb.amount = #{amount}</if>
+            <if test="paidAmount != null "> and pb.paid_amount = #{paidAmount}</if>
+            <if test="remainAmount != null "> and pb.remain_amount = #{remainAmount}</if>
+            <if test="dueDate != null "> and pb.due_date = #{dueDate}</if>
+            <if test="status != null  and status != ''"> and pb.status = #{status}</if>
+            <if test="voucherId != null "> and pb.voucher_id = #{voucherId}</if>
+        </where>
+    </select>
+    
+    <select id="selectFinPayableById" parameterType="Long" resultMap="FinPayableResult">
+        <include refid="selectFinPayableVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFinPayable" parameterType="FinPayable" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_payable
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="docNo != null and docNo != ''">doc_no,</if>
+            <if test="partnerId != null">partner_id,</if>
+            <if test="bizType != null and bizType != ''">biz_type,</if>
+            <if test="sourceType != null">source_type,</if>
+            <if test="sourceId != null">source_id,</if>
+            <if test="amount != null">amount,</if>
+            <if test="paidAmount != null">paid_amount,</if>
+            <if test="remainAmount != null">remain_amount,</if>
+            <if test="dueDate != null">due_date,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="voucherId != null">voucher_id,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="docNo != null and docNo != ''">#{docNo},</if>
+            <if test="partnerId != null">#{partnerId},</if>
+            <if test="bizType != null and bizType != ''">#{bizType},</if>
+            <if test="sourceType != null">#{sourceType},</if>
+            <if test="sourceId != null">#{sourceId},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="paidAmount != null">#{paidAmount},</if>
+            <if test="remainAmount != null">#{remainAmount},</if>
+            <if test="dueDate != null">#{dueDate},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="voucherId != null">#{voucherId},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFinPayable" parameterType="FinPayable">
+        update fin_payable
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="docNo != null and docNo != ''">doc_no = #{docNo},</if>
+            <if test="partnerId != null">partner_id = #{partnerId},</if>
+            <if test="bizType != null and bizType != ''">biz_type = #{bizType},</if>
+            <if test="sourceType != null">source_type = #{sourceType},</if>
+            <if test="sourceId != null">source_id = #{sourceId},</if>
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="paidAmount != null">paid_amount = #{paidAmount},</if>
+            <if test="remainAmount != null">remain_amount = #{remainAmount},</if>
+            <if test="dueDate != null">due_date = #{dueDate},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="voucherId != null">voucher_id = #{voucherId},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFinPayableById" parameterType="Long">
+        delete from fin_payable where id = #{id}
+    </delete>
+
+    <delete id="deleteFinPayableByIds" parameterType="String">
+        delete from fin_payable where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

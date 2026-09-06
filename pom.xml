@@ -31,6 +31,7 @@
         <jwt.version>0.9.1</jwt.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <springdoc.version>3.0.3</springdoc.version>
+        <wxjava.version>4.8.0</wxjava.version>
     </properties>
 
     <!-- 依赖声明 -->
@@ -168,6 +169,13 @@
                 <groupId>com.jonlink</groupId>
                 <artifactId>jonlink-common</artifactId>
                 <version>${jonlink.version}</version>
+            </dependency>
+
+            <!-- 企业微信 SDK -->
+            <dependency>
+                <groupId>com.github.binarywang</groupId>
+                <artifactId>weixin-java-cp</artifactId>
+                <version>${wxjava.version}</version>
             </dependency>
 
         </dependencies>

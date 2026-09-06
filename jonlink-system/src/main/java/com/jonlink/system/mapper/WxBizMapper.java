@@ -148,6 +148,9 @@ public interface WxBizMapper
     int updateLedgerSettle(@Param("id") Long id, @Param("direction") String direction,
             @Param("status") String status, @Param("settleNo") String settleNo);
 
+    /** 按保单号查台账(核销回写用) */
+    JonlinkInsuranceLedger selectLedgerByPolicyNo(@Param("policyNo") String policyNo);
+
     /** 更新订单结算状态 */
     int updateOrderSettled(@Param("id") Long id);
 
@@ -157,6 +160,10 @@ public interface WxBizMapper
     /** 渠道绑定: 按 scene 更新粉丝分销归属 */
     int updateUserDistributor(@Param("id") Long id, @Param("distributorId") Long distributorId,
             @Param("bindTime") String bindTime, @Param("bindSource") String bindSource);
+
+    /** 粉丝活跃度更新(activity_count+1 / last_activity_time / activity_level 重算) */
+    int updateUserActivity(@Param("id") Long id, @Param("activityLevel") String activityLevel,
+            @Param("now") String now);
 
     /** 查询分销员下级列表 */
     List<WxDistMember> selectDistChildren(@Param("parentId") Long parentId);
@@ -169,4 +176,16 @@ public interface WxBizMapper
 
     /** 插入模板 */
     int insertTemplate(WxMpTemplate template);
+
+    /** 按 order_no 查订单 */
+    WxBizOrder selectWxBizOrderByOrderNo(@Param("orderNo") String orderNo);
+
+    /** 粉丝来源统计 */
+    List<Map<String, Object>> dashboardFanSource();
+
+    /** 用户画像(性别) */
+    Map<String, Object> dashboardUserPortrait();
+
+    /** 公众号矩阵 */
+    List<Map<String, Object>> dashboardMpMatrix();
 }

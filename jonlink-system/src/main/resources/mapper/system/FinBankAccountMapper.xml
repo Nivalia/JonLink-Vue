@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.FinBankAccountMapper">
+    
+    <resultMap type="FinBankAccount" id="FinBankAccountResult">
+        <result property="id"    column="id"    />
+        <result property="accountName"    column="account_name"    />
+        <result property="accountNo"    column="account_no"    />
+        <result property="bankName"    column="bank_name"    />
+        <result property="initBalance"    column="init_balance"    />
+        <result property="currentBalance"    column="current_balance"    />
+        <result property="status"    column="status"    />
+        <result property="remark"    column="remark"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectFinBankAccountVo">
+        select id, account_name, account_no, bank_name, init_balance, current_balance, status, remark, create_by, create_time, update_by, update_time from fin_bank_account
+    </sql>
+
+    <select id="selectFinBankAccountList" parameterType="FinBankAccount" resultMap="FinBankAccountResult">
+        <include refid="selectFinBankAccountVo"/>
+        <where>  
+            <if test="accountName != null  and accountName != ''"> and account_name like concat('%', #{accountName}, '%')</if>
+            <if test="accountNo != null  and accountNo != ''"> and account_no = #{accountNo}</if>
+            <if test="bankName != null  and bankName != ''"> and bank_name like concat('%', #{bankName}, '%')</if>
+            <if test="initBalance != null "> and init_balance = #{initBalance}</if>
+            <if test="currentBalance != null "> and current_balance = #{currentBalance}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectFinBankAccountById" parameterType="Long" resultMap="FinBankAccountResult">
+        <include refid="selectFinBankAccountVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFinBankAccount" parameterType="FinBankAccount" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_bank_account
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="accountName != null and accountName != ''">account_name,</if>
+            <if test="accountNo != null and accountNo != ''">account_no,</if>
+            <if test="bankName != null">bank_name,</if>
+            <if test="initBalance != null">init_balance,</if>
+            <if test="currentBalance != null">current_balance,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="accountName != null and accountName != ''">#{accountName},</if>
+            <if test="accountNo != null and accountNo != ''">#{accountNo},</if>
+            <if test="bankName != null">#{bankName},</if>
+            <if test="initBalance != null">#{initBalance},</if>
+            <if test="currentBalance != null">#{currentBalance},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFinBankAccount" parameterType="FinBankAccount">
+        update fin_bank_account
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="accountName != null and accountName != ''">account_name = #{accountName},</if>
+            <if test="accountNo != null and accountNo != ''">account_no = #{accountNo},</if>
+            <if test="bankName != null">bank_name = #{bankName},</if>
+            <if test="initBalance != null">init_balance = #{initBalance},</if>
+            <if test="currentBalance != null">current_balance = #{currentBalance},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <!-- 乐观锁更新余额: 仅当 current_balance 匹配时才更新，返回影响行数 -->
+    <update id="updateBalanceWithOptimisticLock" parameterType="java.util.Map">
+        UPDATE fin_bank_account
+        SET current_balance = #{newBalance},
+            update_by = #{updateBy},
+            update_time = NOW()
+        WHERE id = #{id} AND current_balance = #{oldBalance}
+    </update>
+
+    <delete id="deleteFinBankAccountById" parameterType="Long">
+        delete from fin_bank_account where id = #{id}
+    </delete>
+
+    <delete id="deleteFinBankAccountByIds" parameterType="String">
+        delete from fin_bank_account where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

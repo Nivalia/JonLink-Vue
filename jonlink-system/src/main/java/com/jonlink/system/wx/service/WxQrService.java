@@ -89,7 +89,8 @@ public class WxQrService
             throw new RuntimeException("创建临时二维码失败: " + r.get("err"));
         }
         WxQrScene scene = new WxQrScene();
-        scene.setSceneId((long) (System.currentTimeMillis() % 100000000));
+        // 使用时间戳 + 随机数生成唯一 sceneId，避免高并发重复
+        scene.setSceneId(System.currentTimeMillis() % 100000000L + (long) (Math.random() * 1000));
         scene.setQrType("1");
         scene.setTicket(String.valueOf(r.get("ticket")));
         scene.setQrUrl(String.valueOf(r.get("qrUrl")));

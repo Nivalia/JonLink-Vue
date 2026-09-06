@@ -19,11 +19,11 @@ public class WxMpTemplate extends BaseEntity
     private Long id;
 
     /** 微信模板ID(唯一) */
-    @Excel(name = "微信模板ID(唯一)")
+    @Excel(name = "模板ID")
     private String templateId;
 
     /** 模板库短ID(创建时用) */
-    @Excel(name = "模板库短ID(创建时用)")
+    @Excel(name = "模板短ID")
     private String templateIdShort;
 
     /** 模板标题 */
@@ -31,11 +31,11 @@ public class WxMpTemplate extends BaseEntity
     private String title;
 
     /** 模板内容(含{{keywordN.DATA}}占位) */
-    @Excel(name = "模板内容(含{{keywordN.DATA}}占位)")
+    @Excel(name = "模板内容")
     private String content;
 
     /** 关键词顺序(如 keyword1,keyword2..) */
-    @Excel(name = "关键词顺序(如 keyword1,keyword2..)")
+    @Excel(name = "关键词顺序")
     private String keywordOrder;
 
     /** 主营行业 */
@@ -50,8 +50,20 @@ public class WxMpTemplate extends BaseEntity
     @Excel(name = "模板示例")
     private String example;
 
+    /** 关键词元数据 JSON:[{key,name,sample,bizField},...] */
+    private String keywordMeta;
+
+    /** 链接类型 0无 1关联H5 2自定义URL */
+    private String urlType;
+
+    /** 关联H5页面ID */
+    private Long h5PageId;
+
+    /** 自定义URL(支持 {ticket}) */
+    private String customUrl;
+
     /** 状态 0停用 1启用(本地启停) */
-    @Excel(name = "状态 0停用 1启用(本地启停)")
+    @Excel(name = "状态")
     private String status;
 
     public void setId(Long id) 
@@ -134,14 +146,54 @@ public class WxMpTemplate extends BaseEntity
         return deputyIndustry;
     }
 
-    public void setExample(String example) 
+    public void setExample(String example)
     {
         this.example = example;
     }
 
-    public String getExample() 
+    public String getExample()
     {
         return example;
+    }
+
+    public void setKeywordMeta(String keywordMeta)
+    {
+        this.keywordMeta = keywordMeta;
+    }
+
+    public String getKeywordMeta()
+    {
+        return keywordMeta;
+    }
+
+    public void setUrlType(String urlType)
+    {
+        this.urlType = urlType;
+    }
+
+    public String getUrlType()
+    {
+        return urlType;
+    }
+
+    public void setH5PageId(Long h5PageId)
+    {
+        this.h5PageId = h5PageId;
+    }
+
+    public Long getH5PageId()
+    {
+        return h5PageId;
+    }
+
+    public void setCustomUrl(String customUrl)
+    {
+        this.customUrl = customUrl;
+    }
+
+    public String getCustomUrl()
+    {
+        return customUrl;
     }
 
     public void setStatus(String status) 
@@ -166,6 +218,10 @@ public class WxMpTemplate extends BaseEntity
             .append("primaryIndustry", getPrimaryIndustry())
             .append("deputyIndustry", getDeputyIndustry())
             .append("example", getExample())
+            .append("keywordMeta", getKeywordMeta())
+            .append("urlType", getUrlType())
+            .append("h5PageId", getH5PageId())
+            .append("customUrl", getCustomUrl())
             .append("status", getStatus())
             .append("remark", getRemark())
             .append("createBy", getCreateBy())

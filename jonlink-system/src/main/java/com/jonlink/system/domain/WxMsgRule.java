@@ -27,23 +27,23 @@ public class WxMsgRule extends BaseEntity
     private String ruleName;
 
     /** 业务事件类型（settle_up上游结算/settle_down下游结算/dist_commission分销佣金/order_verify订单核销） */
-    @Excel(name = "业务事件类型", readConverterExp = "s=ettle_up上游结算/settle_down下游结算/dist_commission分销佣金/order_verify订单核销")
+    @Excel(name = "事件类型", readConverterExp = "s=ettle_up上游结算/settle_down下游结算/dist_commission分销佣金/order_verify订单核销")
     private String bizType;
 
     /** 关联 wx_mp_template.id（微信后台模板） */
-    @Excel(name = "关联 wx_mp_template.id", readConverterExp = "微=信后台模板")
+    @Excel(name = "模板ID", readConverterExp = "微=信后台模板")
     private Long templateId;
 
     /** 内容组装规则(JSON)：keyword占位符映射，如 {"policyNo":"{保单号}","amount":"{金额}"} */
-    @Excel(name = "内容组装规则(JSON)")
+    @Excel(name = "内容规则")
     private String contentRule;
 
     /** 跳转地址模板(含{ticket}防伪占位)，可为空 */
-    @Excel(name = "跳转地址模板(含{ticket}防伪占位)，可为空")
+    @Excel(name = "跳转地址")
     private String urlRule;
 
     /** 受众规则(JSON)：如 {"source":"channel_phone"} 取台账渠道手机号；支持 fans_openid 直接推 */
-    @Excel(name = "受众规则(JSON)")
+    @Excel(name = "受众规则")
     private String audienceRule;
 
     /** 是否启用（0停用 1启用） */
@@ -53,6 +53,9 @@ public class WxMsgRule extends BaseEntity
     /** 排序 */
     @Excel(name = "排序")
     private Integer sortOrder;
+
+    /** 模板标题（关联查询） */
+    private String templateTitle;
 
     public void setId(Long id) 
     {
@@ -152,6 +155,16 @@ public class WxMsgRule extends BaseEntity
     public Integer getSortOrder() 
     {
         return sortOrder;
+    }
+
+    public void setTemplateTitle(String templateTitle) 
+    {
+        this.templateTitle = templateTitle;
+    }
+
+    public String getTemplateTitle() 
+    {
+        return templateTitle;
     }
 
     @Override

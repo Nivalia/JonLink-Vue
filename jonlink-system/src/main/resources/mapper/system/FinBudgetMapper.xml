@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.FinBudgetMapper">
+    
+    <resultMap type="FinBudget" id="FinBudgetResult">
+        <result property="id"    column="id"    />
+        <result property="subjectCode"    column="subject_code"    />
+        <result property="subjectName"    column="subject_name"    />
+        <result property="periodCode"    column="period_code"    />
+        <result property="budgetAmount"    column="budget_amount"    />
+        <result property="actualAmount"    column="actual_amount"    />
+        <result property="alertThreshold"    column="alert_threshold"    />
+        <result property="status"    column="status"    />
+        <result property="remark"    column="remark"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectFinBudgetVo">
+        select id, subject_code, subject_name, period_code, budget_amount, actual_amount, alert_threshold, status, remark, create_by, create_time, update_by, update_time
+        from fin_budget
+    </sql>
+
+    <select id="selectFinBudgetList" parameterType="FinBudget" resultMap="FinBudgetResult">
+        <include refid="selectFinBudgetVo"/>
+        <where>  
+            <if test="subjectCode != null  and subjectCode != ''"> and subject_code = #{subjectCode}</if>
+            <if test="subjectName != null  and subjectName != ''"> and subject_name like concat('%', #{subjectName}, '%')</if>
+            <if test="periodCode != null  and periodCode != ''"> and period_code = #{periodCode}</if>
+            <if test="budgetAmount != null "> and budget_amount = #{budgetAmount}</if>
+            <if test="actualAmount != null "> and actual_amount = #{actualAmount}</if>
+            <if test="alertThreshold != null "> and alert_threshold = #{alertThreshold}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectFinBudgetById" parameterType="Long" resultMap="FinBudgetResult">
+        <include refid="selectFinBudgetVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFinBudget" parameterType="FinBudget" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_budget
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="subjectCode != null and subjectCode != ''">subject_code,</if>
+            <if test="subjectName != null and subjectName != ''">subject_name,</if>
+            <if test="periodCode != null and periodCode != ''">period_code,</if>
+            <if test="budgetAmount != null">budget_amount,</if>
+            <if test="actualAmount != null">actual_amount,</if>
+            <if test="alertThreshold != null">alert_threshold,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="subjectCode != null and subjectCode != ''">#{subjectCode},</if>
+            <if test="subjectName != null and subjectName != ''">#{subjectName},</if>
+            <if test="periodCode != null and periodCode != ''">#{periodCode},</if>
+            <if test="budgetAmount != null">#{budgetAmount},</if>
+            <if test="actualAmount != null">#{actualAmount},</if>
+            <if test="alertThreshold != null">#{alertThreshold},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFinBudget" parameterType="FinBudget">
+        update fin_budget
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="subjectCode != null and subjectCode != ''">subject_code = #{subjectCode},</if>
+            <if test="subjectName != null and subjectName != ''">subject_name = #{subjectName},</if>
+            <if test="periodCode != null and periodCode != ''">period_code = #{periodCode},</if>
+            <if test="budgetAmount != null">budget_amount = #{budgetAmount},</if>
+            <if test="actualAmount != null">actual_amount = #{actualAmount},</if>
+            <if test="alertThreshold != null">alert_threshold = #{alertThreshold},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFinBudgetById" parameterType="Long">
+        delete from fin_budget where id = #{id}
+    </delete>
+
+    <delete id="deleteFinBudgetByIds" parameterType="String">
+        delete from fin_budget where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="getBudgetUsage" resultMap="FinBudgetResult">
+        <include refid="selectFinBudgetVo"/>
+        where subject_code = #{subjectCode} and period_code = #{periodCode}
+    </select>
+</mapper>

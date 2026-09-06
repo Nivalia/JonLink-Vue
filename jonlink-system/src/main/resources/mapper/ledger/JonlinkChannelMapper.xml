@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.JonlinkChannelMapper">
+
+    <resultMap type="JonlinkChannel" id="JonlinkChannelResult">
+        <result property="id"           column="id"           />
+        <result property="channelName"  column="channel_name" />
+        <result property="contactId"   column="contact_id"   />
+        <result property="contactPerson" column="contact_person" />
+        <result property="phone"        column="phone"        />
+        <result property="wechat"       column="wechat"       />
+        <result property="settleCycle"  column="settle_cycle" />
+        <result property="status"       column="status"       />
+        <result property="remark"       column="remark"       />
+        <result property="createBy"     column="create_by"    />
+        <result property="createTime"   column="create_time"  />
+        <result property="updateBy"     column="update_by"    />
+        <result property="updateTime"   column="update_time"  />
+    </resultMap>
+
+    <sql id="selectJonlinkChannelVo">
+        select id, channel_name, contact_id, contact_person, phone, wechat, settle_cycle, status, remark, create_by, create_time, update_by, update_time
+        from jonlink_channel
+    </sql>
+
+    <select id="selectJonlinkChannelList" parameterType="JonlinkChannel" resultMap="JonlinkChannelResult">
+        <include refid="selectJonlinkChannelVo"/>
+        <where>
+            <if test="channelName != null and channelName != ''">
+                AND channel_name LIKE concat('%', #{channelName}, '%')
+            </if>
+            <if test="contactPerson != null and contactPerson != ''">
+                AND contact_person LIKE concat('%', #{contactPerson}, '%')
+            </if>
+            <if test="contactId != null">
+                AND contact_id = #{contactId}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY id DESC
+    </select>
+
+    <select id="selectJonlinkChannelById" parameterType="Long" resultMap="JonlinkChannelResult">
+        <include refid="selectJonlinkChannelVo"/>
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectJonlinkChannelOptions" resultMap="JonlinkChannelResult">
+        SELECT id, channel_name FROM jonlink_channel WHERE status = '1' ORDER BY id DESC
+    </select>
+
+    <select id="checkChannelNameUnique" parameterType="JonlinkChannel" resultType="int">
+        SELECT COUNT(*) FROM jonlink_channel
+        WHERE channel_name = #{channelName}
+        <if test="id != null"> AND id &lt;&gt; #{id} </if>
+    </select>
+
+    <insert id="insertJonlinkChannel" parameterType="JonlinkChannel" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO jonlink_channel
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="channelName != null and channelName != ''">channel_name,</if>
+            <if test="contactId != null">contact_id,</if>
+            <if test="contactPerson != null">contact_person,</if>
+            <if test="phone != null">phone,</if>
+            <if test="wechat != null">wechat,</if>
+            <if test="settleCycle != null">settle_cycle,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="channelName != null and channelName != ''">#{channelName},</if>
+            <if test="contactId != null">#{contactId},</if>
+            <if test="contactPerson != null">#{contactPerson},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="wechat != null">#{wechat},</if>
+            <if test="settleCycle != null">#{settleCycle},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateJonlinkChannel" parameterType="JonlinkChannel">
+        UPDATE jonlink_channel
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="channelName != null and channelName != ''">channel_name = #{channelName},</if>
+            <if test="contactId != null">contact_id = #{contactId},</if>
+            <if test="contactPerson != null">contact_person = #{contactPerson},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="wechat != null">wechat = #{wechat},</if>
+            <if test="settleCycle != null">settle_cycle = #{settleCycle},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteJonlinkChannelById" parameterType="Long">
+        DELETE FROM jonlink_channel WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteJonlinkChannelByIds" parameterType="String">
+        DELETE FROM jonlink_channel WHERE id IN
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

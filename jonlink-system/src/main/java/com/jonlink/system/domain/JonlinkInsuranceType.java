@@ -31,7 +31,7 @@ public class JonlinkInsuranceType extends BaseEntity
     private Long sort;
 
     /** 状态 0停用 1启用 */
-    @Excel(name = "状态 0停用 1启用")
+    @Excel(name = "状态")
     private String status;
 
     public void setId(Long id) 

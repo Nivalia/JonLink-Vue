@@ -1,5 +1,6 @@
 package com.jonlink.system.domain;
 
+import java.util.Date;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import com.jonlink.common.annotation.Excel;
@@ -19,11 +20,11 @@ public class WxMpSendBatch extends BaseEntity
     private Long id;
 
     /** 批次号(唯一) */
-    @Excel(name = "批次号(唯一)")
+    @Excel(name = "批次号")
     private String batchNo;
 
     /** 使用的模板ID */
-    @Excel(name = "使用的模板ID")
+    @Excel(name = "模板ID")
     private String templateId;
 
     /** 总条数 */
@@ -31,11 +32,11 @@ public class WxMpSendBatch extends BaseEntity
     private Long total;
 
     /** 待发/超限待发 */
-    @Excel(name = "待发/超限待发")
+    @Excel(name = "待发")
     private Long pending;
 
     /** 成功(送达) */
-    @Excel(name = "成功(送达)")
+    @Excel(name = "成功")
     private Long success;
 
     /** 失败 */
@@ -47,8 +48,12 @@ public class WxMpSendBatch extends BaseEntity
     private Long overdue;
 
     /** 0处理中 1已完成 */
-    @Excel(name = "0处理中 1已完成")
+    @Excel(name = "状态")
     private String status;
+
+    private Long checkPassed;
+    private Long checkFailed;
+    private Date checkTime;
 
     public void setId(Long id) 
     {
@@ -135,9 +140,39 @@ public class WxMpSendBatch extends BaseEntity
         this.status = status;
     }
 
-    public String getStatus() 
+    public String getStatus()
     {
         return status;
+    }
+
+    public void setCheckPassed(Long checkPassed)
+    {
+        this.checkPassed = checkPassed;
+    }
+
+    public Long getCheckPassed()
+    {
+        return checkPassed;
+    }
+
+    public void setCheckFailed(Long checkFailed)
+    {
+        this.checkFailed = checkFailed;
+    }
+
+    public Long getCheckFailed()
+    {
+        return checkFailed;
+    }
+
+    public void setCheckTime(Date checkTime)
+    {
+        this.checkTime = checkTime;
+    }
+
+    public Date getCheckTime()
+    {
+        return checkTime;
     }
 
     @Override

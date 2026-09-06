@@ -20,6 +20,8 @@ import com.jonlink.system.domain.WxMpAccount;
 import com.jonlink.system.service.IWxMpAccountService;
 import com.jonlink.common.utils.poi.ExcelUtil;
 import com.jonlink.common.core.page.TableDataInfo;
+import com.jonlink.system.wx.service.WxMpService;
+import com.alibaba.fastjson2.JSONObject;
 
 /**
  * 账号配置Controller
@@ -33,6 +35,9 @@ public class WxMpAccountController extends BaseController
 {
     @Autowired
     private IWxMpAccountService wxMpAccountService;
+
+    @Autowired
+    private WxMpService wxMpService;
 
     /**
      * 查询账号配置列表
@@ -57,6 +62,29 @@ public class WxMpAccountController extends BaseController
         List<WxMpAccount> list = wxMpAccountService.selectWxMpAccountList(wxMpAccount);
         ExcelUtil<WxMpAccount> util = new ExcelUtil<WxMpAccount>(WxMpAccount.class);
         util.exportExcel(response, list, "账号配置数据");
+    }
+
+    /**
+     * 根据 AppID + Secret 获取公众号名称
+     */
+    @PreAuthorize("@ss.hasPermi('wx:account:edit')")
+    @GetMapping("/fetchInfo")
+    public AjaxResult fetchInfo(String appId, String appSecret)
+    {
+        if (com.jonlink.common.utils.StringUtils.isEmpty(appId) || com.jonlink.common.utils.StringUtils.isEmpty(appSecret))
+        {
+            return error("AppID 和 AppSecret 不能为空");
+        }
+        JSONObject info = wxMpService.fetchAccountBasicInfo(appId, appSecret);
+        if (info == null)
+        {
+            return error("获取公众号信息失败，请检查 AppID 和 AppSecret 是否正确");
+        }
+        AjaxResult result = success("获取成功");
+        result.put("nickName", info.getString("nickname") != null ? info.getString("nickname") : info.getString("nick_name"));
+        result.put("headImg", info.getString("head_image_info") != null ? info.getJSONObject("head_image_info").getString("head_image_url") : null);
+        result.put("principalName", info.getString("principal_name"));
+        return result;
     }
 
     /**
@@ -96,7 +124,7 @@ public class WxMpAccountController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('wx:account:remove')")
     @Log(title = "账号配置", businessType = BusinessType.DELETE)
-	@DeleteMapping("/{ids}")
+    @DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids)
     {
         return toAjax(wxMpAccountService.deleteWxMpAccountByIds(ids));

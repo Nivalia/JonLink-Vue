@@ -30,6 +30,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="downSettleStatus"    column="down_settle_status"    />
         <result property="upSettleNo"    column="up_settle_no"    />
         <result property="downSettleNo"    column="down_settle_no"    />
+        <result property="claimRemark"    column="claim_remark"    />
         <result property="remark"    column="remark"    />
         <result property="createBy"    column="create_by"    />
         <result property="createTime"    column="create_time"    />
@@ -38,7 +39,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectJonlinkInsuranceLedgerVo">
-        select id, ledger_date, channel_type, channel_ref, channel_name, policy_no, product_id, product_name, insurance_type, insurance_company, applicant, insured, premium, tax_flag, up_rate, down_rate, up_channel, down_commission, up_commission, net_fee, profit, up_settle_status, down_settle_status, up_settle_no, down_settle_no, remark, create_by, create_time, update_by, update_time from jonlink_insurance_ledger
+        select id, ledger_date, channel_type, channel_ref, channel_name, policy_no, product_id, product_name, insurance_type, insurance_company, applicant, insured, premium, tax_flag, up_rate, down_rate, up_channel, down_commission, up_commission, net_fee, profit, up_settle_status, down_settle_status, up_settle_no, down_settle_no, claim_remark, remark, create_by, create_time, update_by, update_time from jonlink_insurance_ledger
     </sql>
 
     <select id="selectJonlinkInsuranceLedgerList" parameterType="JonlinkInsuranceLedger" resultMap="JonlinkInsuranceLedgerResult">
@@ -115,6 +116,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="downSettleStatus != null and downSettleStatus != ''">#{downSettleStatus},</if>
             <if test="upSettleNo != null">#{upSettleNo},</if>
             <if test="downSettleNo != null">#{downSettleNo},</if>
+            <if test="claimRemark != null">#{claimRemark},</if>
             <if test="remark != null">#{remark},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
@@ -150,6 +152,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="downSettleStatus != null and downSettleStatus != ''">down_settle_status = #{downSettleStatus},</if>
             <if test="upSettleNo != null">up_settle_no = #{upSettleNo},</if>
             <if test="downSettleNo != null">down_settle_no = #{downSettleNo},</if>
+            <if test="claimRemark != null">claim_remark = #{claimRemark},</if>
             <if test="remark != null">remark = #{remark},</if>
             <if test="createBy != null">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>

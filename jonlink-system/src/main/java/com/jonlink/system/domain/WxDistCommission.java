@@ -20,39 +20,39 @@ public class WxDistCommission extends BaseEntity
     private Long id;
 
     /** 订单号(核销关联,唯一幂等) */
-    @Excel(name = "订单号(核销关联,唯一幂等)")
+    @Excel(name = "订单号")
     private String orderNo;
 
     /** 下单客户手机号 */
-    @Excel(name = "下单客户手机号")
+    @Excel(name = "客户手机号")
     private String customerPhone;
 
     /** 下单客户openid */
-    @Excel(name = "下单客户openid")
+    @Excel(name = "下单客户")
     private String customerOpenid;
 
     /** 受益分销员(直接上级)user_id */
-    @Excel(name = "受益分销员(直接上级)user_id")
+    @Excel(name = "受益分销员")
     private Long beneficiaryId;
 
     /** 受益分销员姓名 */
-    @Excel(name = "受益分销员姓名")
+    @Excel(name = "受益人姓名")
     private String beneficiaryName;
 
     /** 该单佣金(核销金额) */
-    @Excel(name = "该单佣金(核销金额)")
+    @Excel(name = "该单佣金")
     private BigDecimal commissionAmt;
 
     /** 分润比例(默认100%=直接上级独享) */
-    @Excel(name = "分润比例(默认100%=直接上级独享)")
+    @Excel(name = "分润比例")
     private BigDecimal ratio;
 
     /** 记入积分(=佣金*比例) */
-    @Excel(name = "记入积分(=佣金*比例)")
+    @Excel(name = "记入积分")
     private BigDecimal points;
 
     /** 0待入账 1已入账 */
-    @Excel(name = "0待入账 1已入账")
+    @Excel(name = "状态")
     private String status;
 
     public void setId(Long id) 

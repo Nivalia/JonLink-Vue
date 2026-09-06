@@ -40,12 +40,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="selectWxMpUserList" parameterType="WxMpUser" resultMap="WxMpUserResult">
         <include refid="selectWxMpUserVo"/>
-        <where>  
+        <where>
             <if test="openid != null  and openid != ''"> and openid = #{openid}</if>
             <if test="phone != null  and phone != ''"> and phone = #{phone}</if>
             <if test="nickname != null  and nickname != ''"> and nickname like concat('%', #{nickname}, '%')</if>
-            <if test="subscribeTime != null "> and subscribe_time = #{subscribeTime}</if>
+            <if test="subscribe != null and subscribe != ''"> and subscribe = #{subscribe}</if>
+            <if test="activityLevel != null and activityLevel != ''"> and activity_level = #{activityLevel}</if>
+            <if test="bindSource != null and bindSource != ''"> and bind_source = #{bindSource}</if>
+            <if test="subscribeTimeBegin != null and subscribeTimeBegin != ''"> and date_format(subscribe_time, '%Y-%m-%d') &gt;= #{subscribeTimeBegin}</if>
+            <if test="subscribeTimeEnd != null and subscribeTimeEnd != ''"> and date_format(subscribe_time, '%Y-%m-%d') &lt;= #{subscribeTimeEnd}</if>
         </where>
+        order by u.subscribe_time desc
     </select>
     
     <select id="selectWxMpUserById" parameterType="Long" resultMap="WxMpUserResult">
@@ -154,7 +159,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         values (#{openid}, #{phone}, #{nickname}, #{avatar}, #{sex}, #{country}, #{province}, #{city},
             #{subscribe}, #{subscribeTime}, #{lastActivityTime}, #{activityCount}, #{activityLevel}, 'SYSTEM', sysdate(), sysdate())
         on duplicate key update
-            phone = values(phone), nickname = values(nickname), avatar = values(avatar), sex = values(sex),
+            phone = CASE WHEN #{phone} IS NOT NULL AND #{phone} != '' THEN #{phone} ELSE phone END,
+            nickname = values(nickname), avatar = values(avatar), sex = values(sex),
             country = values(country), province = values(province), city = values(city),
             subscribe = values(subscribe), subscribe_time = values(subscribe_time),
             last_activity_time = values(last_activity_time), update_time = sysdate()

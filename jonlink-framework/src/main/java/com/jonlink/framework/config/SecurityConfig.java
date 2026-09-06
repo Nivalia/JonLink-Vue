@@ -101,6 +101,8 @@ public class SecurityConfig
                 permitAllUrl.getUrls().forEach(url -> requests.requestMatchers(url).permitAll());
                 // 对于登录login 注册register 验证码captchaImage 允许匿名访问
                 requests.requestMatchers("/login", "/register", "/captchaImage").permitAll()
+                    // 政策展示端登录接口
+                    .requestMatchers("/policy/view/public/login").permitAll()
                     // 静态资源，可匿名访问
                     .requestMatchers(HttpMethod.GET, "/", "/*.html", "/**.html", "/**.css", "/**.js", "/profile/**").permitAll()
                     // H5 粉丝端页面(模板消息跳转目标, 靠 ticket 鉴权)

@@ -62,6 +62,8 @@ public class WxMpCallbackController extends BaseController
     private WxLedgerService wxLedgerService;
     @Autowired
     private com.jonlink.system.wx.service.IWxMpCallbackLogService wxMpCallbackLogService;
+    @org.springframework.beans.factory.annotation.Value("${wx.callback.allow-mock:true}")
+    private boolean allowMock;
 
     /**
      * 服务器配置验证 (GET): signature/timestamp/nonce/echostr
@@ -174,6 +176,21 @@ public class WxMpCallbackController extends BaseController
             if ("event".equalsIgnoreCase(msgType) && "SCAN".equalsIgnoreCase(event))
             {
                 handleScanEvent(openid, msg, false);
+                bumpActivity(openid);
+                return "success";
+            }
+            // 点击菜单事件 (CLICK) → 活跃度
+            if ("event".equalsIgnoreCase(msgType) && "CLICK".equalsIgnoreCase(event))
+            {
+                bumpActivity(openid);
+                return "success";
+            }
+            // 文本/图片/语音/视频/位置/链接 消息 → 活跃度
+            if ("text".equalsIgnoreCase(msgType) || "image".equalsIgnoreCase(msgType)
+                    || "voice".equalsIgnoreCase(msgType) || "video".equalsIgnoreCase(msgType)
+                    || "location".equalsIgnoreCase(msgType) || "link".equalsIgnoreCase(msgType))
+            {
+                bumpActivity(openid);
                 return "success";
             }
         }
@@ -281,6 +298,41 @@ public class WxMpCallbackController extends BaseController
         wxQrService.handleScan(sceneId, sceneStr, openid, isNew);
     }
 
+    /**
+     * 粉丝活跃度更新:
+     * - activity_count += 1
+     * - last_activity_time = now
+     * - activity_level 重算: count>=50→3, count>=10→2, 否则→1
+     */
+    private void bumpActivity(String openid)
+    {
+        try
+        {
+            WxMpUser u = wxBizMapper.selectUserByOpenid(openid);
+            if (u == null || u.getId() == null)
+            {
+                return;
+            }
+            int newCount = (u.getActivityCount() == null ? 0 : u.getActivityCount().intValue()) + 1;
+            String level = "1";
+            if (newCount >= 50)
+            {
+                level = "3";
+            }
+            else if (newCount >= 10)
+            {
+                level = "2";
+            }
+            String now = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+            wxBizMapper.updateUserActivity(u.getId(), level, now);
+            log.info("[activity] 粉丝活跃+1: openid={} count={} level={}", openid, newCount, level);
+        }
+        catch (Exception e)
+        {
+            log.warn("[activity] 更新粉丝活跃度失败 openid={}: {}", openid, e.getMessage());
+        }
+    }
+
     /** SHA1 验签: sort(token, timestamp, nonce) -> sha1 */
     private boolean checkSignature(String signature, String timestamp, String nonce)
     {
@@ -291,9 +343,17 @@ public class WxMpCallbackController extends BaseController
         String token = getAccountToken();
         if (StringUtils.isEmpty(token))
         {
-            // 未配置账号时 mock 放行(便于联调), 配置后严格验签
-            log.warn("[callback] 未配置公众号 token, mock 放行");
-            return true;
+            if (allowMock)
+            {
+                // 未配置账号时 mock 放行(便于联调), 配置后严格验签
+                log.warn("[callback] 未配置公众号 token, mock 放行");
+                return true;
+            }
+            else
+            {
+                log.error("[callback] 未配置公众号 token, 拒绝访问(请配置 wx.callback.allow-mock=true 或配置公众号账号)");
+                return false;
+            }
         }
         String[] arr = { token, timestamp, nonce };
         Arrays.sort(arr);

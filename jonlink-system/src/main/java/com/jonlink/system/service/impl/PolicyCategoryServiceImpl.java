@@ -2,120 +2,141 @@ package com.jonlink.system.service.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.jonlink.common.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.jonlink.common.exception.ServiceException;
-import com.jonlink.common.utils.DateUtils;
-import com.jonlink.system.domain.PolicyCategory;
 import com.jonlink.system.mapper.PolicyCategoryMapper;
+import com.jonlink.system.domain.PolicyCategory;
 import com.jonlink.system.service.IPolicyCategoryService;
 
 /**
- * 政策分类 Service 业务层实现
+ * 政策分类Service业务层处理
  *
  * @author jonlink
- * @date 2026-08-22
  */
 @Service
 public class PolicyCategoryServiceImpl implements IPolicyCategoryService
 {
     @Autowired
-    private PolicyCategoryMapper categoryMapper;
+    private PolicyCategoryMapper policyCategoryMapper;
 
+    /**
+     * 查询政策分类
+     */
     @Override
-    public List<PolicyCategory> selectPolicyCategoryList(PolicyCategory category) {
-        return categoryMapper.selectPolicyCategoryList(category);
+    public PolicyCategory selectPolicyCategoryById(Long id)
+    {
+        return policyCategoryMapper.selectPolicyCategoryById(id);
     }
 
+    /**
+     * 查询政策分类列表
+     */
     @Override
-    public List<PolicyCategory> selectPolicyCategoryTree(PolicyCategory category) {
-        List<PolicyCategory> all = categoryMapper.selectPolicyCategoryTree(category);
-        return buildTree(all);
+    public List<PolicyCategory> selectPolicyCategoryList(PolicyCategory policyCategory)
+    {
+        return policyCategoryMapper.selectPolicyCategoryList(policyCategory);
     }
 
+    /**
+     * 查询政策分类树
+     */
     @Override
-    public PolicyCategory selectPolicyCategoryById(Long id) {
-        return categoryMapper.selectPolicyCategoryById(id);
+    public List<PolicyCategory> selectPolicyCategoryTree(PolicyCategory policyCategory)
+    {
+        List<PolicyCategory> list = policyCategoryMapper.selectPolicyCategoryTree(policyCategory);
+        return buildTree(list);
     }
 
-    @Override
-    public boolean checkCategoryNameUnique(PolicyCategory category) {
-        Long id = category.getId();
-        PolicyCategory exist = categoryMapper.checkCategoryNameUnique(category);
-        if (exist == null) return true;
-        // 命中自身 id 视为唯一
-        return id != null && id.equals(exist.getId());
-    }
-
-    @Override
-    public int insertPolicyCategory(PolicyCategory category) {
-        if (!checkCategoryNameUnique(category)) {
-            throw new ServiceException("同级分类名称 '" + category.getCategoryName() + "' 已存在");
-        }
-        if (category.getSort() == null) category.setSort(0);
-        if (category.getStatus() == null || category.getStatus().isEmpty()) category.setStatus("1");
-        category.setCreateTime(DateUtils.getNowDate());
-        return categoryMapper.insertPolicyCategory(category);
-    }
-
-    @Override
-    public int updatePolicyCategory(PolicyCategory category) {
-        if (!checkCategoryNameUnique(category)) {
-            throw new ServiceException("同级分类名称 '" + category.getCategoryName() + "' 已存在");
-        }
-        category.setUpdateTime(DateUtils.getNowDate());
-        return categoryMapper.updatePolicyCategory(category);
-    }
-
-    @Override
-    public int deletePolicyCategoryById(Long id) {
-        // 有子分类则不能删
-        PolicyCategory probe = new PolicyCategory();
-        probe.setParentId(id);
-        List<PolicyCategory> children = categoryMapper.selectPolicyCategoryList(probe);
-        if (!children.isEmpty()) {
-            throw new ServiceException("存在子分类,不允许删除");
-        }
-        return categoryMapper.deletePolicyCategoryById(id);
-    }
-
-    @Override
-    public int deletePolicyCategoryByIds(Long[] ids) {
-        // 任一 id 有子分类都不允许删
-        for (Long id : ids) {
-            PolicyCategory probe = new PolicyCategory();
-            probe.setParentId(id);
-            List<PolicyCategory> children = categoryMapper.selectPolicyCategoryList(probe);
-            if (!children.isEmpty()) {
-                throw new ServiceException("分类 id=" + id + " 存在子分类,不允许删除");
-            }
-        }
-        return categoryMapper.deletePolicyCategoryByIds(ids);
-    }
-
-    @Override
-    public List<PolicyCategory> buildTree(List<PolicyCategory> all) {
-        if (all == null || all.isEmpty()) return new ArrayList<>();
-        // 索引一级
+    /**
+     * 构建分类树
+     */
+    private List<PolicyCategory> buildTree(List<PolicyCategory> list)
+    {
         List<PolicyCategory> roots = new ArrayList<>();
-        for (PolicyCategory c : all) {
-            if (c.getParentId() == null || c.getParentId() == 0L) {
-                c.setChildren(new ArrayList<>());
-                roots.add(c);
+        for (PolicyCategory node : list)
+        {
+            if (node.getParentId() == null || node.getParentId() == 0L)
+            {
+                roots.add(node);
             }
         }
-        // 二级挂一级
-        for (PolicyCategory c : all) {
-            Long pid = c.getParentId();
-            if (pid == null || pid == 0L) continue;
-            for (PolicyCategory r : roots) {
-                if (pid.equals(r.getId())) {
-                    if (r.getChildren() == null) r.setChildren(new ArrayList<>());
-                    r.getChildren().add(c);
-                    break;
-                }
-            }
+        for (PolicyCategory root : roots)
+        {
+            root.setChildren(getChildren(root.getId(), list));
         }
         return roots;
+    }
+
+    /**
+     * 获取子节点
+     */
+    private List<PolicyCategory> getChildren(Long parentId, List<PolicyCategory> list)
+    {
+        List<PolicyCategory> children = new ArrayList<>();
+        for (PolicyCategory node : list)
+        {
+            if (parentId.equals(node.getParentId()))
+            {
+                children.add(node);
+            }
+        }
+        for (PolicyCategory child : children)
+        {
+            child.setChildren(getChildren(child.getId(), list));
+        }
+        return children;
+    }
+
+    /**
+     * 新增政策分类
+     */
+    @Override
+    public int insertPolicyCategory(PolicyCategory policyCategory)
+    {
+        policyCategory.setCreateTime(DateUtils.getNowDate());
+        return policyCategoryMapper.insertPolicyCategory(policyCategory);
+    }
+
+    /**
+     * 修改政策分类
+     */
+    @Override
+    public int updatePolicyCategory(PolicyCategory policyCategory)
+    {
+        policyCategory.setUpdateTime(DateUtils.getNowDate());
+        return policyCategoryMapper.updatePolicyCategory(policyCategory);
+    }
+
+    /**
+     * 批量删除政策分类
+     */
+    @Override
+    public int deletePolicyCategoryByIds(Long[] ids)
+    {
+        return policyCategoryMapper.deletePolicyCategoryByIds(ids);
+    }
+
+    /**
+     * 删除政策分类信息
+     */
+    @Override
+    public int deletePolicyCategoryById(Long id)
+    {
+        return policyCategoryMapper.deletePolicyCategoryById(id);
+    }
+
+    /**
+     * 校验分类名称唯一
+     */
+    @Override
+    public boolean checkCategoryNameUnique(PolicyCategory policyCategory)
+    {
+        PolicyCategory info = policyCategoryMapper.checkCategoryNameUnique(policyCategory);
+        if (info != null && !info.getId().equals(policyCategory.getId()))
+        {
+            return false;
+        }
+        return true;
     }
 }

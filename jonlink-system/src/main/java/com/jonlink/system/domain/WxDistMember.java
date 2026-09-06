@@ -22,32 +22,32 @@ public class WxDistMember extends BaseEntity
     private Long id;
 
     /** 系统用户ID(唯一) */
-    @Excel(name = "系统用户ID(唯一)")
+    @Excel(name = "用户ID")
     private Long userId;
 
     /** 姓名(冗余) */
-    @Excel(name = "姓名(冗余)")
+    @Excel(name = "姓名")
     private String userName;
 
     /** 上级分销员user_id(空=顶级) */
-    @Excel(name = "上级分销员user_id(空=顶级)")
+    @Excel(name = "上级分销员")
     private Long parentId;
 
     /** 链深度(顶级=1,展示用) */
-    @Excel(name = "链深度(顶级=1,展示用)")
+    @Excel(name = "链深度")
     private Long depth;
 
     /** 积分累计(佣金1:1) */
-    @Excel(name = "积分累计(佣金1:1)")
+    @Excel(name = "积分累计")
     private BigDecimal accumPoints;
 
     /** 0停用 1启用 */
-    @Excel(name = "0停用 1启用")
+    @Excel(name = "状态")
     private String status;
 
     /** 成为分销员时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "成为分销员时间", width = 30, dateFormat = "yyyy-MM-dd")
+    @Excel(name = "分销时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date joinTime;
 
     /** 下级分销员(树形展示用, 非表字段) */

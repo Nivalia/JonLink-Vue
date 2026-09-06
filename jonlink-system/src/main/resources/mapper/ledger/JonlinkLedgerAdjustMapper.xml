@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.JonlinkLedgerAdjustMapper">
+    
+    <resultMap type="com.jonlink.system.domain.JonlinkLedgerAdjust" id="JonlinkLedgerAdjustResult">
+        <result property="id"            column="id"            />
+        <result property="ledgerId"      column="ledger_id"     />
+        <result property="adjustType"    column="adjust_type"   />
+        <result property="adjustPremium" column="adjust_premium"/>
+        <result property="adjustReason"  column="adjust_reason" />
+        <result property="adjustDate"    column="adjust_date"   />
+        <result property="adjustBy"      column="adjust_by"     />
+        <result property="remark"        column="remark"        />
+        <result property="createBy"      column="create_by"     />
+        <result property="createTime"    column="create_time"   />
+        <result property="updateBy"      column="update_by"     />
+        <result property="updateTime"    column="update_time"   />
+    </resultMap>
+
+    <sql id="selectJonlinkLedgerAdjustVo">
+        select id, ledger_id, adjust_type, adjust_premium, adjust_reason, adjust_date, adjust_by, remark, create_by, create_time, update_by, update_time
+        from jonlink_ledger_adjust
+    </sql>
+
+    <select id="selectJonlinkLedgerAdjustById" parameterType="Long" resultMap="JonlinkLedgerAdjustResult">
+        <include refid="selectJonlinkLedgerAdjustVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectJonlinkLedgerAdjustList" parameterType="com.jonlink.system.domain.JonlinkLedgerAdjust" resultMap="JonlinkLedgerAdjustResult">
+        <include refid="selectJonlinkLedgerAdjustVo"/>
+        <where>
+            <if test="ledgerId != null">
+                and ledger_id = #{ledgerId}
+            </if>
+            <if test="adjustType != null and adjustType != ''">
+                and adjust_type = #{adjustType}
+            </if>
+            <if test="adjustDate != null">
+                and adjust_date = #{adjustDate}
+            </if>
+            <if test="adjustBy != null and adjustBy != ''">
+                and adjust_by like concat('%', #{adjustBy}, '%')
+            </if>
+            <if test="remark != null and remark != ''">
+                and remark like concat('%', #{remark}, '%')
+            </if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <insert id="insertJonlinkLedgerAdjust" parameterType="com.jonlink.system.domain.JonlinkLedgerAdjust" useGeneratedKeys="true" keyProperty="id">
+        insert into jonlink_ledger_adjust
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="ledgerId != null">ledger_id,</if>
+            <if test="adjustType != null and adjustType != ''">adjust_type,</if>
+            <if test="adjustPremium != null">adjust_premium,</if>
+            <if test="adjustReason != null and adjustReason != ''">adjust_reason,</if>
+            <if test="adjustDate != null">adjust_date,</if>
+            <if test="adjustBy != null and adjustBy != ''">adjust_by,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="ledgerId != null">#{ledgerId},</if>
+            <if test="adjustType != null and adjustType != ''">#{adjustType},</if>
+            <if test="adjustPremium != null">#{adjustPremium},</if>
+            <if test="adjustReason != null and adjustReason != ''">#{adjustReason},</if>
+            <if test="adjustDate != null">#{adjustDate},</if>
+            <if test="adjustBy != null and adjustBy != ''">#{adjustBy},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateJonlinkLedgerAdjust" parameterType="com.jonlink.system.domain.JonlinkLedgerAdjust">
+        update jonlink_ledger_adjust
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="ledgerId != null">ledger_id = #{ledgerId},</if>
+            <if test="adjustType != null and adjustType != ''">adjust_type = #{adjustType},</if>
+            <if test="adjustPremium != null">adjust_premium = #{adjustPremium},</if>
+            <if test="adjustReason != null and adjustReason != ''">adjust_reason = #{adjustReason},</if>
+            <if test="adjustDate != null">adjust_date = #{adjustDate},</if>
+            <if test="adjustBy != null and adjustBy != ''">adjust_by = #{adjustBy},</if>
+            <if test="remark != null and remark != ''">remark = #{remark},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteJonlinkLedgerAdjustById" parameterType="Long">
+        delete from jonlink_ledger_adjust where id = #{id}
+    </delete>
+
+    <delete id="deleteJonlinkLedgerAdjustByIds" parameterType="String">
+        delete from jonlink_ledger_adjust where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

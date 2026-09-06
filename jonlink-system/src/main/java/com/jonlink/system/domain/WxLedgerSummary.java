@@ -35,11 +35,11 @@ public class WxLedgerSummary extends BaseEntity
     private Long totalCount;
 
     /** 当日金额合计 */
-    @Excel(name = "当日金额合计")
+    @Excel(name = "当日金额")
     private BigDecimal totalAmount;
 
     /** 当日积分合计 */
-    @Excel(name = "当日积分合计")
+    @Excel(name = "当日积分")
     private BigDecimal totalPoints;
 
     public void setId(Long id) 

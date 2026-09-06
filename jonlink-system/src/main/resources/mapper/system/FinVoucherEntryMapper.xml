@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.FinVoucherEntryMapper">
+    
+    <resultMap type="FinVoucherEntry" id="FinVoucherEntryResult">
+        <result property="id"    column="id"    />
+        <result property="voucherId"    column="voucher_id"    />
+        <result property="subjectId"    column="subject_id"    />
+        <result property="summary"    column="summary"    />
+        <result property="debitAmount"    column="debit_amount"    />
+        <result property="creditAmount"    column="credit_amount"    />
+        <result property="partnerId"    column="partner_id"    />
+        <result property="bankAccountId"    column="bank_account_id"    />
+        <result property="sortOrder"    column="sort_order"    />
+    
+        <result property="voucherNo"    column="voucher_no"    />
+        <result property="subjectCode"    column="subject_code"    />
+        <result property="subjectName"    column="subject_name"    />
+        <result property="partnerName"    column="partner_name"    />
+        <result property="bankAccountName"    column="bank_account_name"    />
+    </resultMap>
+
+    <sql id="selectFinVoucherEntryVo">        select ve.*
+        , v.voucher_no AS voucher_no
+        , s.subject_code AS subject_code
+        , s.subject_name AS subject_name
+        , p.partner_name AS partner_name
+        , ba.account_name AS bank_account_name
+ from fin_voucher_entry ve
+        LEFT JOIN fin_voucher v ON ve.voucher_id = v.id
+        LEFT JOIN fin_subject s ON ve.subject_id = s.id
+        LEFT JOIN fin_partner p ON ve.partner_id = p.id
+        LEFT JOIN fin_bank_account ba ON ve.bank_account_id = ba.id
+    </sql>
+
+    <select id="selectFinVoucherEntryList" parameterType="FinVoucherEntry" resultMap="FinVoucherEntryResult">
+        <include refid="selectFinVoucherEntryVo"/>
+        <where>  
+            <if test="voucherId != null "> and ve.voucher_id = #{voucherId}</if>
+            <if test="subjectId != null "> and ve.subject_id = #{subjectId}</if>
+            <if test="summary != null  and summary != ''"> and ve.summary = #{summary}</if>
+            <if test="debitAmount != null "> and ve.debit_amount = #{debitAmount}</if>
+            <if test="creditAmount != null "> and ve.credit_amount = #{creditAmount}</if>
+            <if test="partnerId != null "> and ve.partner_id = #{partnerId}</if>
+            <if test="bankAccountId != null "> and ve.bank_account_id = #{bankAccountId}</if>
+            <if test="sortOrder != null "> and ve.sort_order = #{sortOrder}</if>
+        </where>
+    </select>
+    
+    <select id="selectFinVoucherEntryById" parameterType="Long" resultMap="FinVoucherEntryResult">
+        <include refid="selectFinVoucherEntryVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFinVoucherEntry" parameterType="FinVoucherEntry" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_voucher_entry
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="voucherId != null">voucher_id,</if>
+            <if test="subjectId != null">subject_id,</if>
+            <if test="summary != null">summary,</if>
+            <if test="debitAmount != null">debit_amount,</if>
+            <if test="creditAmount != null">credit_amount,</if>
+            <if test="partnerId != null">partner_id,</if>
+            <if test="bankAccountId != null">bank_account_id,</if>
+            <if test="sortOrder != null">sort_order,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="voucherId != null">#{voucherId},</if>
+            <if test="subjectId != null">#{subjectId},</if>
+            <if test="summary != null">#{summary},</if>
+            <if test="debitAmount != null">#{debitAmount},</if>
+            <if test="creditAmount != null">#{creditAmount},</if>
+            <if test="partnerId != null">#{partnerId},</if>
+            <if test="bankAccountId != null">#{bankAccountId},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFinVoucherEntry" parameterType="FinVoucherEntry">
+        update fin_voucher_entry
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="voucherId != null">voucher_id = #{voucherId},</if>
+            <if test="subjectId != null">subject_id = #{subjectId},</if>
+            <if test="summary != null">summary = #{summary},</if>
+            <if test="debitAmount != null">debit_amount = #{debitAmount},</if>
+            <if test="creditAmount != null">credit_amount = #{creditAmount},</if>
+            <if test="partnerId != null">partner_id = #{partnerId},</if>
+            <if test="bankAccountId != null">bank_account_id = #{bankAccountId},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFinVoucherEntryById" parameterType="Long">
+        delete, voucher_no, subject_code, subject_name, partner_name, bank_account_name
+        from fin_voucher_entry where
+        LEFT JOIN fin_voucher v ON ve.voucher_id = v.id
+        LEFT JOIN fin_subject s ON ve.subject_id = s.id
+        LEFT JOIN fin_partner p ON ve.partner_id = p.id
+        LEFT JOIN fin_bank_account ba ON ve.bank_account_id = ba.id id = #{id}
+    </delete>
+
+    <delete id="deleteFinVoucherEntryByIds" parameterType="String">
+        delete from fin_voucher_entry where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 按 voucher_id 查全部分录(凭证展示/打印) -->
+    <select id="selectByVoucherId" parameterType="Long" resultMap="FinVoucherEntryResult">
+        <include refid="selectFinVoucherEntryVo"/>
+        where voucher_id = #{voucherId}
+        order by sort_order asc, id asc
+    </select>
+
+    <!-- 按 voucher_id 物理删除(凭证头物理删时用) -->
+    <delete id="deleteByVoucherId" parameterType="Long">
+        delete from fin_voucher_entry where voucher_id = #{voucherId}
+    </delete>
+</mapper>

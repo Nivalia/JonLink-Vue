@@ -12,6 +12,8 @@ import com.jonlink.system.domain.WxMpUser;
 import com.jonlink.system.mapper.JonlinkInsuranceLedgerMapper;
 import com.jonlink.system.mapper.JonlinkSettleRecordMapper;
 import com.jonlink.system.mapper.WxBizMapper;
+import com.jonlink.system.mapper.JonlinkChannelUserMapper;
+import com.jonlink.system.domain.JonlinkChannelUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +41,8 @@ public class LedgerSettleService
     private WxBizMapper wxBizMapper;
     @Autowired
     private com.jonlink.system.mapper.WxMpUserMapper wxMpUserMapper;
+    @Autowired
+    private JonlinkChannelUserMapper jonlinkChannelUserMapper;
     @Autowired
     private WxMsgRuleExecutor ruleExecutor;
 
@@ -121,8 +125,13 @@ public class LedgerSettleService
         return Map.of("ok", true, "code", "OK", "msg", "结算成功", "settleNo", settleNo, "amount", amount);
     }
 
-    /** 渠道手机号解析: channel_type=1 公众号粉丝 -> wx_mp_user.phone (channel_ref=粉丝表id) */
-    private String resolveChannelPhone(JonlinkInsuranceLedger ledger)
+    /**
+     * 渠道手机号解析:
+     *   channel_type=1 公众号粉丝 -> wx_mp_user.phone (channel_ref=粉丝表id)
+     *   channel_type=2 渠道/业务员 -> jonlink_channel_user.phone (channel_ref=档案id)
+     *   其他 -> null
+     */
+    public String resolveChannelPhone(JonlinkInsuranceLedger ledger)
     {
         if (ledger.getChannelRef() == null)
         {
@@ -133,6 +142,11 @@ public class LedgerSettleService
             if ("1".equals(ledger.getChannelType()))
             {
                 WxMpUser u = wxMpUserMapper.selectWxMpUserById(ledger.getChannelRef());
+                return u == null ? null : u.getPhone();
+            }
+            else if ("2".equals(ledger.getChannelType()))
+            {
+                JonlinkChannelUser u = jonlinkChannelUserMapper.selectJonlinkChannelUserById(ledger.getChannelRef());
                 return u == null ? null : u.getPhone();
             }
         }

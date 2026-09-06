@@ -3,11 +3,14 @@ package com.jonlink.web.controller.wx;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,6 +39,11 @@ import com.jonlink.system.wx.service.TicketService;
 public class WxMpOAuthController extends BaseController
 {
     private static final Logger log = LoggerFactory.getLogger(WxMpOAuthController.class);
+
+    /** 验证码存储: phone -> {code, expireAt} */
+    private static final ConcurrentHashMap<String, long[]> CODE_STORE = new ConcurrentHashMap<>();
+    /** 验证码有效期 5 分钟 */
+    private static final long CODE_EXPIRE_MS = TimeUnit.MINUTES.toMillis(5);
 
     @Autowired
     private WxMpOAuthService oauthService;
@@ -89,6 +97,7 @@ public class WxMpOAuthController extends BaseController
                       + "&ticket=" + URLEncoder.encode(ticket, StandardCharsets.UTF_8)
                       + "&nickname=" + URLEncoder.encode(safe(user.get("nickname")), StandardCharsets.UTF_8)
                       + "&avatar=" + URLEncoder.encode(safe(user.get("avatar")), StandardCharsets.UTF_8)
+                      + "&phone=" + URLEncoder.encode(safe(user.get("phone")), StandardCharsets.UTF_8)
                       + (state != null ? "&state=" + URLEncoder.encode(state, StandardCharsets.UTF_8) : "")
                     : "/wx/oauth/user?openid=" + openidStr;
             log.info("[wx-oauth] callback → redirect to {}", target);
@@ -114,6 +123,54 @@ public class WxMpOAuthController extends BaseController
     public AjaxResult error(@RequestParam(required = false) String msg)
     {
         return AjaxResult.error("授权失败: " + msg);
+    }
+
+    /** H5 绑定手机号 */
+    @PostMapping("/bindPhone")
+    public AjaxResult bindPhone(@RequestParam String openid, @RequestParam String phone, @RequestParam(required = false) String code)
+    {
+        if (StringUtils.isEmpty(openid) || StringUtils.isEmpty(phone)) {
+            return AjaxResult.error("openid 和手机号不能为空");
+        }
+        // 验证短信验证码
+        if (StringUtils.isEmpty(code)) {
+            return AjaxResult.error("验证码不能为空");
+        }
+        long[] stored = CODE_STORE.get(phone);
+        if (stored == null) {
+            return AjaxResult.error("验证码已过期，请重新获取");
+        }
+        if (System.currentTimeMillis() > stored[1]) {
+            CODE_STORE.remove(phone);
+            return AjaxResult.error("验证码已过期，请重新获取");
+        }
+        if (!String.valueOf((int) stored[0]).equals(code)) {
+            return AjaxResult.error("验证码错误");
+        }
+        CODE_STORE.remove(phone);
+        var q = new com.jonlink.system.domain.WxMpUser();
+        q.setOpenid(openid);
+        var list = wxMpUserMapper().selectWxMpUserList(q);
+        if (list.isEmpty()) return AjaxResult.error("用户未授权");
+        var user = list.get(0);
+        user.setPhone(phone);
+        wxMpUserMapper().updateWxMpUser(user);
+        log.info("[wx-oauth] bindPhone openid={}, phone={}", openid, phone);
+        return AjaxResult.success("绑定成功");
+    }
+
+    /** 发送验证码（生成6位随机验证码，暂存内存，实际生产环境需对接短信服务） */
+    @PostMapping("/sendCode")
+    public AjaxResult sendCode(@RequestParam String phone)
+    {
+        if (StringUtils.isEmpty(phone) || !phone.matches("^1[3-9]\\d{9}$")) {
+            return AjaxResult.error("手机号格式不正确");
+        }
+        int code = (int) (Math.random() * 900000 + 100000);
+        long expireAt = System.currentTimeMillis() + CODE_EXPIRE_MS;
+        CODE_STORE.put(phone, new long[]{code, expireAt});
+        log.info("[wx-oauth] sendCode phone={}, code={} (生产环境需对接短信服务)", phone, code);
+        return AjaxResult.success("验证码已发送");
     }
 
     private static String safe(Object o) { return o == null ? "" : o.toString(); }

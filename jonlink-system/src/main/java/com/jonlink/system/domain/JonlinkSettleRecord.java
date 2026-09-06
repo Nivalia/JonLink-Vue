@@ -22,27 +22,27 @@ public class JonlinkSettleRecord extends BaseEntity
     private Long id;
 
     /** 结算单号(唯一) */
-    @Excel(name = "结算单号(唯一)")
+    @Excel(name = "结算单号")
     private String settleNo;
 
     /** 方向 0上游结费(收入) 1下游结费(支出) */
-    @Excel(name = "方向 0上游结费(收入) 1下游结费(支出)")
+    @Excel(name = "方向")
     private String direction;
 
     /** 关联台账行(单笔结算) */
-    @Excel(name = "关联台账行(单笔结算)")
+    @Excel(name = "关联台账")
     private Long ledgerId;
 
     /** 保单号(冗余) */
-    @Excel(name = "保单号(冗余)")
+    @Excel(name = "保单号")
     private String policyNo;
 
     /** 结算金额(如上游=上游税后佣金, 下游=下游佣金) */
-    @Excel(name = "结算金额(如上游=上游税后佣金, 下游=下游佣金)")
+    @Excel(name = "结算金额")
     private BigDecimal amount;
 
     /** 状态 0作废 1已结算 */
-    @Excel(name = "状态 0作废 1已结算")
+    @Excel(name = "状态")
     private String settleStatus;
 
     /** 经手人 */

@@ -55,7 +55,7 @@ public class ResourcesConfig implements WebMvcConfigurer
     public CorsFilter corsFilter()
     {
         CorsConfiguration config = new CorsConfiguration();
-        // 设置访问源地址
+        // [AUDIT-2026-09-04] 项目尚未开发完,CORS 保持 * 开放;真生产必须改白名单(替换 addAllowedOriginPattern("*") 为具体域名)
         config.addAllowedOriginPattern("*");
         // 设置访问源请求头
         config.addAllowedHeader("*");

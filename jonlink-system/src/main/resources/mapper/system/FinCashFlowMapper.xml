@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.FinCashFlowMapper">
+    
+    <resultMap type="FinCashFlow" id="FinCashFlowResult">
+        <result property="id"    column="id"    />
+        <result property="bankAccountId"    column="bank_account_id"    />
+        <result property="direction"    column="direction"    />
+        <result property="amount"    column="amount"    />
+        <result property="balanceAfter"    column="balance_after"    />
+        <result property="bizType"    column="biz_type"    />
+        <result property="bizId"    column="biz_id"    />
+        <result property="flowTime"    column="flow_time"    />
+        <result property="remark"    column="remark"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+    
+        <result property="bankAccountName"    column="bank_account_name"    />
+        <result property="bizNo"    column="biz_no"    />
+    </resultMap>
+
+    <sql id="selectFinCashFlowVo">
+        select f.*
+        , ba.account_name AS bank_account_name
+        , COALESCE(fr.bill_no, fp.bill_no, fe.expense_no, iv.invoice_no, NULL) AS biz_no
+        from fin_cash_flow f
+        LEFT JOIN fin_bank_account ba ON f.bank_account_id = ba.id
+        LEFT JOIN fin_receipt fr  ON f.biz_type IN ('CUSTOMER_RECEIPT','UPSTREAM_RECEIPT','DOWN_COMMISSION_RECEIPT') AND f.biz_id = fr.id
+        LEFT JOIN fin_payment fp  ON f.biz_type IN ('DOWN_COMMISSION_PAY','UP_COMMISSION_PAY','INVOICE_PAY')          AND f.biz_id = fp.id
+        LEFT JOIN fin_expense fe  ON f.biz_type = 'EXPENSE_REIMBURSE'                                                AND f.biz_id = fe.id
+        LEFT JOIN fin_invoice iv  ON f.biz_type IN ('INVOICE','INVOICE_RECEIPT')                                    AND f.biz_id = iv.id
+    </sql>
+
+    <select id="selectFinCashFlowList" parameterType="FinCashFlow" resultMap="FinCashFlowResult">
+        <include refid="selectFinCashFlowVo"/>
+        <where>  
+            <if test="bankAccountId != null "> and f.bank_account_id = #{bankAccountId}</if>
+            <if test="direction != null  and direction != ''"> and f.direction = #{direction}</if>
+            <if test="amount != null "> and f.amount = #{amount}</if>
+            <if test="balanceAfter != null "> and f.balance_after = #{balanceAfter}</if>
+            <if test="bizType != null  and bizType != ''"> and f.biz_type = #{bizType}</if>
+            <if test="bizId != null "> and f.biz_id = #{bizId}</if>
+            <if test="flowTime != null "> and f.flow_time = #{flowTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectFinCashFlowById" parameterType="Long" resultMap="FinCashFlowResult">
+        <include refid="selectFinCashFlowVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFinCashFlow" parameterType="FinCashFlow" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_cash_flow
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="bankAccountId != null">bank_account_id,</if>
+            <if test="direction != null and direction != ''">direction,</if>
+            <if test="amount != null">amount,</if>
+            <if test="balanceAfter != null">balance_after,</if>
+            <if test="bizType != null">biz_type,</if>
+            <if test="bizId != null">biz_id,</if>
+            <if test="flowTime != null">flow_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="bankAccountId != null">#{bankAccountId},</if>
+            <if test="direction != null and direction != ''">#{direction},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="balanceAfter != null">#{balanceAfter},</if>
+            <if test="bizType != null">#{bizType},</if>
+            <if test="bizId != null">#{bizId},</if>
+            <if test="flowTime != null">#{flowTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFinCashFlow" parameterType="FinCashFlow">
+        update fin_cash_flow
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="bankAccountId != null">bank_account_id = #{bankAccountId},</if>
+            <if test="direction != null and direction != ''">direction = #{direction},</if>
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="balanceAfter != null">balance_after = #{balanceAfter},</if>
+            <if test="bizType != null">biz_type = #{bizType},</if>
+            <if test="bizId != null">biz_id = #{bizId},</if>
+            <if test="flowTime != null">flow_time = #{flowTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFinCashFlowById" parameterType="Long">
+        delete from fin_cash_flow where id = #{id}
+    </delete>
+
+    <delete id="deleteFinCashFlowByIds" parameterType="String">
+        delete from fin_cash_flow where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

@@ -19,6 +19,8 @@ public interface WxMpTemplateMapper
      */
     public WxMpTemplate selectWxMpTemplateById(Long id);
 
+    public WxMpTemplate selectWxMpTemplateByTemplateId(String templateId);
+
     /**
      * 查询模板管理列表
      * 

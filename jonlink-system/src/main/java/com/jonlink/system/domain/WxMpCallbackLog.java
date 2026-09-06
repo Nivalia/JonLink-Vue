@@ -29,7 +29,7 @@ public class WxMpCallbackLog extends BaseEntity
     private String event;
 
     /** 发送方openid */
-    @Excel(name = "发送方openid")
+    @Excel(name = "发送方")
     private String fromUser;
 
     /** 接收方(公众号原始ID) */

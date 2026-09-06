@@ -63,6 +63,8 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <addResources>true</addResources>
+                    <!-- [AUDIT-2026-09-04] 生产 jar 不打包 devtools -->
+                    <excludeDevtools>true</excludeDevtools>
                 </configuration>
                 <executions>
                     <execution>

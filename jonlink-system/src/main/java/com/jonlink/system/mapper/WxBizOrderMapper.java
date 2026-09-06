@@ -1,6 +1,7 @@
 package com.jonlink.system.mapper;
 
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 import com.jonlink.system.domain.WxBizOrder;
 
 /**
@@ -58,4 +59,13 @@ public interface WxBizOrderMapper
      * @return 结果
      */
     public int deleteWxBizOrderByIds(Long[] ids);
+
+    /** 归档候选: verify_status=1 + create_time < now - N天 */
+    List<WxBizOrder> selectArchiveCandidates(@Param("days") int days);
+
+    /** 查台账下游结费状态(归档判断): 0=未结, 1=已结, -1=台账无此单 */
+    int selectLedgerDownSettleStatusByOrderNo(@Param("orderNo") String orderNo);
+
+    /** 搬移: INSERT archive + DELETE 主表(由 xml 实现) */
+    int moveToArchive(@Param("id") Long id);
 }

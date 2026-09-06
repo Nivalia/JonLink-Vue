@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.FinExpenseItemMapper">
+    
+    <resultMap type="FinExpenseItem" id="FinExpenseItemResult">
+        <result property="id"    column="id"    />
+        <result property="expenseId"    column="expense_id"    />
+        <result property="itemName"    column="item_name"    />
+        <result property="amount"    column="amount"    />
+        <result property="invoiceId"    column="invoice_id"    />
+        <result property="remark"    column="remark"    />
+        <result property="sortOrder"    column="sort_order"    />
+    
+        <result property="expenseNo"    column="expense_no"    />
+        <result property="invoiceNo"    column="invoice_no"    />
+    </resultMap>
+
+    <sql id="selectFinExpenseItemVo">        select ei.*
+        , ex.expense_no AS expense_no
+        , inv.invoice_no AS invoice_no from fin_expense_item ei
+        LEFT JOIN fin_expense ex ON ei.expense_id = ex.id
+        LEFT JOIN fin_invoice inv ON ei.invoice_id = inv.id
+    </sql>
+
+    <select id="selectFinExpenseItemListByExpenseId" parameterType="Long" resultMap="FinExpenseItemResult">
+        <include refid="selectFinExpenseItemVo"/>
+        WHERE expense_id = #{expenseId}
+        ORDER BY sort_order ASC
+    </select>
+
+    <select id="selectFinExpenseItemList" parameterType="FinExpenseItem" resultMap="FinExpenseItemResult">
+        <include refid="selectFinExpenseItemVo"/>
+        <where>  
+            <if test="expenseId != null "> and ei.expense_id = #{expenseId}</if>
+            <if test="itemName != null  and itemName != ''"> and item_name like concat('%', #{itemName}, '%')</if>
+            <if test="amount != null "> and ei.amount = #{amount}</if>
+            <if test="invoiceId != null "> and ei.invoice_id = #{invoiceId}</if>
+            <if test="sortOrder != null "> and ei.sort_order = #{sortOrder}</if>
+        </where>
+    </select>
+    
+    <select id="selectFinExpenseItemById" parameterType="Long" resultMap="FinExpenseItemResult">
+        <include refid="selectFinExpenseItemVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFinExpenseItem" parameterType="FinExpenseItem" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_expense_item
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="expenseId != null">expense_id,</if>
+            <if test="itemName != null">item_name,</if>
+            <if test="amount != null">amount,</if>
+            <if test="invoiceId != null">invoice_id,</if>
+            <if test="remark != null">remark,</if>
+            <if test="sortOrder != null">sort_order,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="expenseId != null">#{expenseId},</if>
+            <if test="itemName != null">#{itemName},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="invoiceId != null">#{invoiceId},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFinExpenseItem" parameterType="FinExpenseItem">
+        update fin_expense_item
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="expenseId != null">expense_id = #{expenseId},</if>
+            <if test="itemName != null">item_name = #{itemName},</if>
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="invoiceId != null">invoice_id = #{invoiceId},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFinExpenseItemById" parameterType="Long">
+        delete from fin_expense_item where id = #{id}
+    </delete>
+
+    <delete id="deleteFinExpenseItemByIds" parameterType="String">
+        delete from fin_expense_item where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteByExpenseId" parameterType="Long">
+        delete from fin_expense_item where expense_id = #{expenseId}
+    </delete>
+</mapper>

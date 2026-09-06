@@ -56,6 +56,7 @@ package com.jonlink.web.controller.wx;
 import com.jonlink.common.core.domain.entity.SysUser;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import com.jonlink.common.annotation.Anonymous;
 import com.jonlink.common.annotation.Log;
 import com.jonlink.common.core.controller.BaseController;
 import com.jonlink.common.core.domain.AjaxResult;
@@ -70,6 +71,8 @@ import com.jonlink.system.domain.WxMpTemplate;
 import com.jonlink.system.domain.WxMpTemplateMsg;
 import com.jonlink.system.domain.WxMpUser;
 import com.jonlink.system.domain.WxQrScene;
+import com.jonlink.system.domain.WxBizOrder;
+import com.jonlink.system.domain.JonlinkInsuranceLedger;
 import com.jonlink.system.mapper.WxBizMapper;
 import com.jonlink.system.mapper.WxMpUserMapper;
 import com.jonlink.system.mapper.SysUserMapper;
@@ -86,6 +89,7 @@ import com.jonlink.system.wx.service.WxVerifyService;
 import com.jonlink.web.controller.wx.WxMpBizController;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.InputStream;
+import java.util.Date;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
@@ -105,6 +109,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -114,6 +119,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import com.jonlink.common.utils.ip.IpUtils;
 
 @RestController
 @RequestMapping
@@ -142,6 +151,14 @@ extends BaseController {
     private WxMpUserMapper wxMpUserMapper;
     @Autowired
     private SysUserMapper sysUserMapper;
+    @Autowired
+    private StringRedisTemplate redis;
+    @Autowired
+    private com.jonlink.system.mapper.JonlinkInsuranceLedgerMapper ledgerMapper;
+    @Autowired
+    private com.jonlink.system.mapper.WxBizMapper wxBizMapper;
+    @Autowired
+    private com.jonlink.system.mapper.WxBizOrderMapper wxBizOrderMapper;
 
     @PreAuthorize(value="@ss.hasPermi('wx:order:verify')")
     @Log(title="订单核销", businessType=BusinessType.OTHER)
@@ -151,8 +168,135 @@ extends BaseController {
         String phone = body.get("phone") == null ? null : String.valueOf(body.get("phone"));
         String carNo = body.get("carNo") == null ? null : String.valueOf(body.get("carNo"));
         BigDecimal amount = body.get("amount") == null ? null : new BigDecimal(String.valueOf(body.get("amount")));
-        Map r = this.wxVerifyService.verify(orderNo, phone, carNo, amount);
+        String extJson = body.get("extJson") == null ? null : String.valueOf(body.get("extJson"));
+        // 限流: 同 orderNo 5s/3次, 同 IP 1s/10次(防刷 + 防重入)
+        String clientIp = getCurrentRequestIp();
+        if (!checkRateLimit("verify:order:" + orderNo, 3, 5) || !checkRateLimit("verify:ip:" + clientIp, 10, 1)) {
+            log.warn("[verify] 触发限流 orderNo={} ip={}", orderNo, clientIp);
+            return AjaxResult.error("请求过于频繁,请稍后再试");
+        }
+        Map r = this.wxVerifyService.verify(orderNo, phone, carNo, amount, extJson);
         return Boolean.TRUE.equals(r.get("ok")) ? this.success(r) : AjaxResult.error((String)(String.valueOf(r.get("code")) + ":" + String.valueOf(r.get("msg"))));
+    }
+
+    /**
+     * H5 公开核销端点(扫码进入,匿名,无后台权限)。
+     * 行为与 /wx/mp/verify 一致,但走 wxVerifyService.verify(同样有 wx_fc_config 必填校验)。
+     * 不参与 Redis 限流(防刷放后台,这里只做业务校验)。
+     */
+    @Anonymous
+    @PostMapping(value = { "/wx/h5/verify" })
+    public AjaxResult h5Verify(@RequestBody Map<String, Object> body) {
+        String orderNo = body.get("orderNo") == null ? "" : String.valueOf(body.get("orderNo"));
+        String phone = body.get("phone") == null ? null : String.valueOf(body.get("phone"));
+        String carNo = body.get("carNo") == null ? null : String.valueOf(body.get("carNo"));
+        BigDecimal amount = body.get("amount") == null ? null : new BigDecimal(String.valueOf(body.get("amount")));
+        String extJson = body.get("extJson") == null ? null : String.valueOf(body.get("extJson"));
+        Map r = this.wxVerifyService.verify(orderNo, phone, carNo, amount, extJson);
+        return Boolean.TRUE.equals(r.get("ok")) ? this.success(r) : AjaxResult.error((String)(String.valueOf(r.get("code")) + ":" + String.valueOf(r.get("msg"))));
+    }
+
+    /**
+     * 弹窗用: 拉可同步的台账行(未同步过 + 未核销 + 日期区间)
+     * GET /wx/order/syncCandidates?startDate=2026-08-01&endDate=2026-08-13
+     */
+    @GetMapping("/wx/order/syncCandidates")
+    public AjaxResult syncCandidates(String startDate, String endDate) {
+        JonlinkInsuranceLedger q = new JonlinkInsuranceLedger();
+        List<JonlinkInsuranceLedger> list = ledgerMapper.selectJonlinkInsuranceLedgerList(q);
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        java.time.LocalDate s = startDate == null || startDate.isEmpty() ? null : java.time.LocalDate.parse(startDate);
+        java.time.LocalDate e = endDate == null || endDate.isEmpty() ? null : java.time.LocalDate.parse(endDate);
+        for (JonlinkInsuranceLedger l : list) {
+            // 仅未核销 + 在日期区间
+            if (!"0".equals(l.getDownSettleStatus())) continue;
+            if (l.getLedgerDate() == null) continue;
+            java.time.LocalDate d = l.getLedgerDate().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+            if (s != null && d.isBefore(s)) continue;
+            if (e != null && d.isAfter(e)) continue;
+            // 跳过: 已同步(source_type=2 的 wx_biz_order 已有同 policy_no)
+            WxBizOrder exist = wxBizMapper.selectOrderByNo(l.getPolicyNo());
+            if (exist != null) continue;
+            Map<String, Object> row = new java.util.HashMap<>();
+            row.put("id", l.getId());
+            row.put("ledgerDate", l.getLedgerDate());
+            row.put("policyNo", l.getPolicyNo());
+            row.put("applicant", l.getApplicant());
+            row.put("premium", l.getPremium());
+            row.put("channelName", l.getChannelName());
+            row.put("channelType", l.getChannelType());
+            row.put("channelRef", l.getChannelRef());
+            result.add(row);
+        }
+        return success(result);
+    }
+
+    /**
+     * 台账同步 → wx_biz_order (source_type=2)
+     * POST /wx/order/syncFromLedger  body: {ledgerIds:[1,2,3]}
+     */
+    @PreAuthorize(value="@ss.hasPermi('wx:order:add')")
+    @Log(title="台账同步订单", businessType=BusinessType.INSERT)
+    @PostMapping("/wx/order/syncFromLedger")
+    public AjaxResult syncFromLedger(@RequestBody Map<String, Object> body) {
+        Object idsObj = body.get("ledgerIds");
+        if (!(idsObj instanceof List) || ((List<?>) idsObj).isEmpty()) {
+            return AjaxResult.error("ledgerIds 不能为空");
+        }
+        @SuppressWarnings("unchecked")
+        List<Number> ids = (List<Number>) idsObj;
+        int success = 0, skip = 0;
+        for (Number n : ids) {
+            JonlinkInsuranceLedger l = ledgerMapper.selectJonlinkInsuranceLedgerById(n.longValue());
+            if (l == null) { skip++; continue; }
+            WxBizOrder exist = wxBizMapper.selectOrderByNo(l.getPolicyNo());
+            if (exist != null) { skip++; continue; }
+            WxBizOrder o = new WxBizOrder();
+            o.setOrderNo(l.getPolicyNo());
+            o.setPhone(ledgerSettleService.resolveChannelPhone(l));
+            o.setCustomerName(l.getApplicant());
+            o.setAmount(l.getPremium());
+            o.setOrderType("1");
+            o.setSourceType("2");
+            o.setStatus("0");
+            o.setVerifyStatus("0");
+            o.setCreateBy(com.jonlink.common.utils.SecurityUtils.getUsername());
+            o.setCreateTime(new Date());
+            wxBizOrderMapper.insertWxBizOrder(o);
+            success++;
+        }
+        Map<String, Object> r = new HashMap<>();
+        r.put("success", success);
+        r.put("skip", skip);
+        r.put("msg", "同步成功 " + success + " 条,跳过 " + skip + " 条");
+        return success(r);
+    }
+
+    /** Redis 滑动窗口限流;返回 true=允许, false=超限 */
+    private boolean checkRateLimit(String key, int maxCount, int seconds) {
+        try {
+            String fullKey = "rl:" + key;
+            Long cnt = redis.opsForValue().increment(fullKey);
+            if (cnt != null && cnt == 1L) {
+                redis.expire(fullKey, java.time.Duration.ofSeconds(seconds));
+            }
+            return cnt == null || cnt <= maxCount;
+        } catch (Exception e) {
+            log.warn("[rate-limit] 限流检查失败,放行: {}", e.getMessage());
+            return true;
+        }
+    }
+
+    private static String getCurrentRequestIp() {
+        try {
+            ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attrs != null) {
+                HttpServletRequest req = attrs.getRequest();
+                return IpUtils.getIpAddr(req);
+            }
+        } catch (Exception ignored) {
+        }
+        return "unknown";
     }
 
     @PreAuthorize(value="@ss.hasPermi('wx:qr:add')")
@@ -185,7 +329,7 @@ extends BaseController {
     }
 
     @PreAuthorize(value="@ss.hasPermi('wx:template:add')")
-    @PostMapping(value={"/wx/template/sync"})
+    @PostMapping(value={"/wx/mp/template/sync"})
     public AjaxResult syncTemplate() {
         List<JSONObject> list = this.wxMpService.getAllTemplates();
         if (list.isEmpty()) {
@@ -197,9 +341,17 @@ extends BaseController {
         for (JSONObject t : list) {
             WxMpTemplate tp = new WxMpTemplate();
             tp.setTemplateId(t.getString("template_id"));
+            tp.setTemplateIdShort(t.getString("template_id_short") != null ? t.getString("template_id_short") : "");
             tp.setTitle(t.getString("title"));
             tp.setContent(t.getString("content"));
             tp.setKeywordOrder(t.getString("keyword_id_list") == null ? "" : t.getString("keyword_id_list"));
+            tp.setPrimaryIndustry(t.getString("primary_industry"));
+            tp.setDeputyIndustry(t.getString("deputy_industry"));
+            tp.setExample(t.getString("example"));
+            // 从 content 自动提取关键词映射
+            String content = t.getString("content") != null ? t.getString("content") : "";
+            String example = t.getString("example") != null ? t.getString("example") : "";
+            tp.setKeywordMeta(parseKeywordMeta(content, example));
             tp.setStatus("1");
             wxBizMapper.insertTemplate(tp);
             ++n;
@@ -397,6 +549,24 @@ extends BaseController {
         return this.success(this.getWxBizMapper().dashboardNotice(limit < 1 ? 3 : Math.min(limit, 50)));
     }
 
+    @PreAuthorize(value="@ss.hasPermi('led:dash:view')")
+    @GetMapping(value={"/wx/dashboard/fanSource"})
+    public AjaxResult fanSource() {
+        return this.success(this.getWxBizMapper().dashboardFanSource());
+    }
+
+    @PreAuthorize(value="@ss.hasPermi('led:dash:view')")
+    @GetMapping(value={"/wx/dashboard/userPortrait"})
+    public AjaxResult userPortrait() {
+        return this.success(this.getWxBizMapper().dashboardUserPortrait());
+    }
+
+    @PreAuthorize(value="@ss.hasPermi('led:dash:view')")
+    @GetMapping(value={"/wx/dashboard/mpMatrix"})
+    public AjaxResult mpMatrix() {
+        return this.success(this.getWxBizMapper().dashboardMpMatrix());
+    }
+
     @PreAuthorize(value="@ss.hasPermi('wx:user:edit')")
     @PostMapping(value={"/wx/user/sync"})
     public AjaxResult syncFollowers() {
@@ -406,6 +576,19 @@ extends BaseController {
         }
         boolean mock = Boolean.TRUE.equals(r.get("mock"));
         return this.success("同步完成" + (mock ? "(模拟模式)" : "") + "：共 " + String.valueOf(r.get("total")) + " 人，新增 " + String.valueOf(r.get("added")) + "，更新 " + String.valueOf(r.get("updated")));
+    }
+
+    @PreAuthorize(value="@ss.hasPermi('wx:user:edit')")
+    @PostMapping(value={"/wx/user/syncDistFan"})
+    public AjaxResult syncDistFan() {
+        try {
+            com.jonlink.system.wx.service.DistFanSyncService syncService =
+                com.jonlink.common.utils.spring.SpringUtils.getBean(com.jonlink.system.wx.service.DistFanSyncService.class);
+            syncService.syncAll();
+            return this.success("业务员↔粉丝同步完成");
+        } catch (Exception e) {
+            return AjaxResult.error("同步失败: " + e.getMessage());
+        }
     }
 
     @PreAuthorize(value="@ss.hasPermi('wx:batch:add')")
@@ -673,7 +856,201 @@ extends BaseController {
         }
     }
 
+    /**
+     * 从微信模板 content 字段解析关键词映射。
+     * content 格式: {{first.DATA}}\n保单号：{{keyword1.DATA}}\n...
+     * example 格式: first内容\nkeyword1内容\n...
+     */
+    private String parseKeywordMeta(String content, String example) {
+        java.util.List<java.util.Map<String, String>> kwList = new java.util.ArrayList<>();
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("\\{\\{(\\w+)\\.DATA\\}\\}");
+        java.util.regex.Matcher m = p.matcher(content);
+        String[] exampleLines = example != null ? example.split("\\r?\\n") : new String[0];
+        int exampleIdx = 0;
+        while (m.find()) {
+            String key = m.group(1);
+            int pos = m.start();
+            String name = key;
+            if (pos > 0) {
+                String before = content.substring(0, pos);
+                int lastNewline = before.lastIndexOf('\n');
+                String line = (lastNewline >= 0 ? before.substring(lastNewline + 1) : before).trim();
+                name = line.replaceAll("[：:]+$", "").trim();
+                if (name.contains("{{") || name.isEmpty()) name = key;
+            }
+            String sample = "";
+            if ("first".equals(key) || "remark".equals(key)) {
+                // first/remark 不加入 kwList，但推进 example 索引
+                exampleIdx++;
+                continue;
+            }
+            if (exampleIdx < exampleLines.length) {
+                sample = exampleLines[exampleIdx].trim();
+                if (sample.contains("：")) sample = sample.substring(sample.indexOf("：") + 1).trim();
+            }
+            exampleIdx++;
+            java.util.Map<String, String> kw = new java.util.HashMap<>();
+            kw.put("key", key);
+            kw.put("name", name);
+            kw.put("sample", sample);
+            kwList.add(kw);
+        }
+        return kwList.isEmpty() ? null : JSON.toJSONString(kwList);
+    }
+
     private WxBizMapper getWxBizMapper() {
         return (WxBizMapper)SpringUtils.getBean(WxBizMapper.class);
+    }
+
+    // ==================== Excel 导入核销订单 ====================
+
+    /** Excel 模板列定义(用户后续补充,改这里即可) */
+    private static final String[] ORDER_IMPORT_HEADERS = {"订单号", "手机号", "客户名称", "金额", "车牌号"};
+
+    /**
+     * 下载导入模板 GET /wx/order/importTemplate
+     */
+    @GetMapping("/wx/order/importTemplate")
+    public void downloadOrderImportTemplate(HttpServletResponse response) {
+        try {
+            XSSFWorkbook wb = new XSSFWorkbook();
+            XSSFSheet sheet = wb.createSheet("核销订单导入");
+            Row head = sheet.createRow(0);
+            for (int i = 0; i < ORDER_IMPORT_HEADERS.length; i++) {
+                head.createCell(i).setCellValue(ORDER_IMPORT_HEADERS[i]);
+            }
+            // 示例行(可删)
+            Row sample = sheet.createRow(1);
+            sample.createCell(0).setCellValue("示例订单号(请删除)");
+            sample.createCell(1).setCellValue("13800000000");
+            sample.createCell(2).setCellValue("张三");
+            sample.createCell(3).setCellValue(5000.00);
+            sample.createCell(4).setCellValue("冀A12345");
+            for (int i = 0; i < ORDER_IMPORT_HEADERS.length; i++) {
+                sheet.setColumnWidth(i, 5120);
+            }
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=order_import_template.xlsx");
+            wb.write(response.getOutputStream());
+            wb.close();
+        }
+        catch (Exception e) {
+            log.error("[order-import] 模板下载失败: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Excel 导入 POST /wx/order/importExcel  multipart: file
+     * 返回 {success, failList:[{row, reason}]}
+     */
+    @PreAuthorize(value="@ss.hasPermi('wx:order:add')")
+    @Log(title="订单Excel导入", businessType=BusinessType.IMPORT)
+    @PostMapping("/wx/order/importExcel")
+    public AjaxResult importOrderExcel(@RequestParam("file") MultipartFile file) {
+        if (file == null || file.isEmpty()) return AjaxResult.error("请上传 Excel 文件");
+        List<Map<String, Object>> failList = new ArrayList<>();
+        int success = 0;
+        try (Workbook wb = WorkbookFactory.create(file.getInputStream())) {
+            Sheet sheet = wb.getSheetAt(0);
+            for (int r = 1; r <= sheet.getLastRowNum(); r++) {
+                Row row = sheet.getRow(r);
+                if (row == null) continue;
+                String orderNo = strCell(row.getCell(0));
+                String phone = strCell(row.getCell(1));
+                String customer = strCell(row.getCell(2));
+                String amount = strCell(row.getCell(3));
+                String carNo = strCell(row.getCell(4));
+                int rowNo = r + 1;
+                // 校验
+                if (orderNo.isEmpty()) { addFail(failList, rowNo, "订单号为空"); continue; }
+                if (phone.isEmpty()) { addFail(failList, rowNo, "手机号为空"); continue; }
+                if (!phone.matches("1\\d{10}")) { addFail(failList, rowNo, "手机号格式错误: " + phone); continue; }
+                if (amount.isEmpty()) { addFail(failList, rowNo, "金额为空"); continue; }
+                try { Double.parseDouble(amount); } catch (Exception e) {
+                    addFail(failList, rowNo, "金额格式错误: " + amount); continue;
+                }
+                // 重复单号
+                WxBizOrder exist = wxBizMapper.selectOrderByNo(orderNo);
+                if (exist != null) { addFail(failList, rowNo, "订单号已存在: " + orderNo); continue; }
+                WxBizOrder o = new WxBizOrder();
+                o.setOrderNo(orderNo);
+                o.setPhone(phone);
+                o.setCustomerName(customer);
+                o.setCarNo(carNo.isEmpty() ? null : carNo);
+                o.setAmount(new java.math.BigDecimal(amount));
+                o.setSourceType("1");
+                o.setStatus("0");
+                o.setVerifyStatus("0");
+                o.setCreateBy(com.jonlink.common.utils.SecurityUtils.getUsername());
+                o.setCreateTime(new Date());
+                wxBizOrderMapper.insertWxBizOrder(o);
+                success++;
+            }
+            Map<String, Object> r = new HashMap<>();
+            r.put("success", success);
+            r.put("failCount", failList.size());
+            r.put("failList", failList);
+            return success(r);
+        }
+        catch (Exception e) {
+            log.error("[order-import] 失败: {}", e.getMessage(), e);
+            return AjaxResult.error("导入失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 导出不合格清单 GET /wx/order/exportFailList?rows=[{row,reason}]
+     * 前端把导入返回的 failList 原样回传
+     */
+    @GetMapping("/wx/order/exportFailList")
+    public void exportFailList(@RequestParam(required = false) String rowsJson, HttpServletResponse response) {
+        try {
+            List<Map> failList = new ArrayList<>();
+            if (rowsJson != null && !rowsJson.isEmpty()) {
+                failList = com.alibaba.fastjson2.JSON.parseArray(rowsJson, Map.class);
+            }
+            XSSFWorkbook wb = new XSSFWorkbook();
+            XSSFSheet sheet = wb.createSheet("不合格清单");
+            Row head = sheet.createRow(0);
+            head.createCell(0).setCellValue("行号");
+            head.createCell(1).setCellValue("原因");
+            int i = 1;
+            for (Map f : failList) {
+                Row r = sheet.createRow(i++);
+                r.createCell(0).setCellValue(String.valueOf(f.get("row")));
+                r.createCell(1).setCellValue(String.valueOf(f.get("reason")));
+            }
+            sheet.setColumnWidth(0, 4096);
+            sheet.setColumnWidth(1, 10240);
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=order_import_fail.xlsx");
+            wb.write(response.getOutputStream());
+            wb.close();
+        }
+        catch (Exception e) {
+            log.error("[order-import] 导出不合格清单失败: {}", e.getMessage());
+        }
+    }
+
+    private String strCell(Cell cell) {
+        if (cell == null) return "";
+        try {
+            switch (cell.getCellType()) {
+                case STRING: return cell.getStringCellValue().trim();
+                case NUMERIC:
+                    double v = cell.getNumericCellValue();
+                    if (v == Math.floor(v) && !Double.isInfinite(v)) return String.valueOf((long) v);
+                    return String.valueOf(v);
+                case BOOLEAN: return String.valueOf(cell.getBooleanCellValue());
+                default: return "";
+            }
+        } catch (Exception e) { return ""; }
+    }
+
+    private void addFail(List<Map<String, Object>> list, int row, String reason) {
+        Map<String, Object> f = new HashMap<>();
+        f.put("row", row);
+        f.put("reason", reason);
+        list.add(f);
     }
 }

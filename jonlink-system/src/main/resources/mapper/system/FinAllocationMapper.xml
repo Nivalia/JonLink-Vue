@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.FinAllocationMapper">
+    
+    <resultMap type="FinAllocation" id="FinAllocationResult">
+        <result property="id"    column="id"    />
+        <result property="docType"    column="doc_type"    />
+        <result property="docId"    column="doc_id"    />
+        <result property="receiptId"    column="receipt_id"    />
+        <result property="paymentId"    column="payment_id"    />
+        <result property="amount"    column="amount"    />
+        <result property="allocateTime"    column="allocate_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+    
+        <result property="docNo"    column="doc_no"    />
+        <result property="receiptNo"    column="receipt_no"    />
+        <result property="paymentNo"    column="payment_no"    />
+    </resultMap>
+
+    <sql id="selectFinAllocationVo">        select a.*
+        , COALESCE(rcv.doc_no, pab.doc_no) AS doc_no
+        , rp.bill_no AS receipt_no
+        , pp.bill_no AS payment_no from fin_allocation a
+        LEFT JOIN fin_receivable rcv ON a.doc_type='0' AND a.doc_id = rcv.id
+        LEFT JOIN fin_payable pab ON a.doc_type='1' AND a.doc_id = pab.id
+        LEFT JOIN fin_receipt rp ON a.receipt_id = rp.id
+        LEFT JOIN fin_payment pp ON a.payment_id = pp.id
+    </sql>
+
+    <select id="selectFinAllocationList" parameterType="FinAllocation" resultMap="FinAllocationResult">
+        <include refid="selectFinAllocationVo"/>
+        <where>  
+            <if test="docType != null  and docType != ''"> and a.doc_type = #{docType}</if>
+            <if test="docId != null "> and a.doc_id = #{docId}</if>
+            <if test="receiptId != null "> and a.receipt_id = #{receiptId}</if>
+            <if test="paymentId != null "> and a.payment_id = #{paymentId}</if>
+            <if test="amount != null "> and a.amount = #{amount}</if>
+            <if test="allocateTime != null "> and a.allocate_time = #{allocateTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectFinAllocationById" parameterType="Long" resultMap="FinAllocationResult">
+        <include refid="selectFinAllocationVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFinAllocation" parameterType="FinAllocation" useGeneratedKeys="true" keyProperty="id">
+        insert into fin_allocation
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="docType != null and docType != ''">doc_type,</if>
+            <if test="docId != null">doc_id,</if>
+            <if test="receiptId != null">receipt_id,</if>
+            <if test="paymentId != null">payment_id,</if>
+            <if test="amount != null">amount,</if>
+            <if test="allocateTime != null">allocate_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="docType != null and docType != ''">#{docType},</if>
+            <if test="docId != null">#{docId},</if>
+            <if test="receiptId != null">#{receiptId},</if>
+            <if test="paymentId != null">#{paymentId},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="allocateTime != null">#{allocateTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFinAllocation" parameterType="FinAllocation">
+        update fin_allocation
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="docType != null and docType != ''">doc_type = #{docType},</if>
+            <if test="docId != null">doc_id = #{docId},</if>
+            <if test="receiptId != null">receipt_id = #{receiptId},</if>
+            <if test="paymentId != null">payment_id = #{paymentId},</if>
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="allocateTime != null">allocate_time = #{allocateTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFinAllocationById" parameterType="Long">
+        delete from fin_allocation where id = #{id}
+    </delete>
+
+    <delete id="deleteFinAllocationByIds" parameterType="String">
+        delete from fin_allocation where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

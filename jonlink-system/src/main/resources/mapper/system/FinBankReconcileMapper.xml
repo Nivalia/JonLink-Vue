@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.FinBankReconcileMapper">
+
+    <resultMap type="FinBankReconcile" id="FinBankReconcileResult">
+        <result property="id" column="id" />
+        <result property="bankAccountId" column="bank_account_id" />
+        <result property="bankTransNo" column="bank_trans_no" />
+        <result property="transDate" column="trans_date" />
+        <result property="transAmount" column="trans_amount" />
+        <result property="summary" column="summary" />
+        <result property="counterParty" column="counter_party" />
+        <result property="status" column="status" />
+        <result property="cashFlowId" column="cash_flow_id" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="bankName" column="bank_name" />
+        <result property="accountName" column="account_name" />
+    </resultMap>
+
+    <sql id="selectVo">
+        SELECT r.*, ba.bank_name, ba.account_name
+        FROM fin_bank_reconcile r
+        LEFT JOIN fin_bank_account ba ON r.bank_account_id = ba.id
+    </sql>
+
+    <select id="selectFinBankReconcileById" parameterType="Long" resultMap="FinBankReconcileResult">
+        <include refid="selectVo"/>
+        WHERE r.id = #{id}
+    </select>
+
+    <select id="selectFinBankReconcileList" parameterType="FinBankReconcile" resultMap="FinBankReconcileResult">
+        <include refid="selectVo"/>
+        <where>
+            <if test="bankAccountId != null"> AND r.bank_account_id = #{bankAccountId}</if>
+            <if test="status != null and status != ''"> AND r.status = #{status}</if>
+            <if test="bankTransNo != null and bankTransNo != ''"> AND r.bank_trans_no LIKE CONCAT('%', #{bankTransNo}, '%')</if>
+        </where>
+        ORDER BY r.trans_date DESC
+    </select>
+
+    <insert id="insertFinBankReconcile" parameterType="FinBankReconcile" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO fin_bank_reconcile (bank_account_id, bank_trans_no, trans_date, trans_amount, summary, counter_party, status, cash_flow_id, create_by, create_time)
+        VALUES (#{bankAccountId}, #{bankTransNo}, #{transDate}, #{transAmount}, #{summary}, #{counterParty}, #{status}, #{cashFlowId}, #{createBy}, NOW())
+    </insert>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO fin_bank_reconcile (bank_account_id, bank_trans_no, trans_date, trans_amount, summary, counter_party, status, create_by, create_time)
+        VALUES
+        <foreach item="item" collection="list" separator=",">
+            (#{item.bankAccountId}, #{item.bankTransNo}, #{item.transDate}, #{item.transAmount}, #{item.summary}, #{item.counterParty}, '0', #{item.createBy}, NOW())
+        </foreach>
+    </insert>
+
+    <update id="updateFinBankReconcile" parameterType="FinBankReconcile">
+        UPDATE fin_bank_reconcile
+        SET status = #{status}, cash_flow_id = #{cashFlowId}, update_by = #{updateBy}, update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteFinBankReconcileById" parameterType="Long">
+        DELETE FROM fin_bank_reconcile WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteFinBankReconcileByIds" parameterType="String">
+        DELETE FROM fin_bank_reconcile WHERE id IN
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 未对账的银行流水 -->
+    <select id="selectUnmatched" parameterType="Long" resultMap="FinBankReconcileResult">
+        <include refid="selectVo"/>
+        WHERE r.bank_account_id = #{bankAccountId} AND r.status = '0'
+        ORDER BY r.trans_date
+    </select>
+
+    <!-- 未匹配的系统流水 -->
+    <select id="selectUnmatchedSystemFlows" resultType="java.util.Map">
+        SELECT cf.id AS cashFlowId, cf.bank_account_id AS bankAccountId, cf.direction, cf.amount,
+               cf.flow_time AS flowTime, cf.biz_type AS bizType, cf.remark
+        FROM fin_cash_flow cf
+        WHERE cf.bank_account_id = #{bankAccountId}
+          AND cf.id NOT IN (SELECT cash_flow_id FROM fin_bank_reconcile WHERE cash_flow_id IS NOT NULL AND bank_account_id = #{bankAccountId})
+          AND cf.flow_time BETWEEN #{startDate} AND #{endDate}
+        ORDER BY cf.flow_time
+    </select>
+
+    <!-- 余额调节表 -->
+    <select id="getReconciliationReport" resultType="java.util.Map">
+        SELECT
+            (SELECT IFNULL(SUM(trans_amount), 0) FROM fin_bank_reconcile WHERE bank_account_id = #{bankAccountId} AND status = '0') AS bankUnmatched,
+            (SELECT IFNULL(SUM(amount), 0) FROM fin_cash_flow WHERE bank_account_id = #{bankAccountId}) AS systemBalance
+    </select>
+</mapper>

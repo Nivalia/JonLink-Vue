@@ -19,7 +19,7 @@ public class JonlinkContactPerson extends BaseEntity
     private Long id;
 
     /** 联系人姓名 */
-    @Excel(name = "联系人姓名")
+    @Excel(name = "姓名")
     private String contactName;
 
     /** 联系电话 */
@@ -39,7 +39,7 @@ public class JonlinkContactPerson extends BaseEntity
     private String title;
 
     /** 状态 0停用 1启用 */
-    @Excel(name = "状态 0停用 1启用")
+    @Excel(name = "状态")
     private String status;
 
     public void setId(Long id) 

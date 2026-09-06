@@ -43,6 +43,8 @@ public interface WxMpSendBatchMapper
      */
     public int updateWxMpSendBatch(WxMpSendBatch wxMpSendBatch);
 
+    public int updateCheckStats(WxMpSendBatch wxMpSendBatch);
+
     /**
      * 删除发送批次
      * 

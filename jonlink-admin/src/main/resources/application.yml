@@ -7,7 +7,8 @@ jonlink:
   # 版权年份
   copyrightYear: 2026
   # 文件路径 示例（ Windows配置D:/jonlink/uploadPath，Linux配置 /home/jonlink/uploadPath）
-  profile: D:/jonlink/uploadPath
+  # [AUDIT-2026-09-04] 换 Linux 路径,真生产用 env UPLOAD_PATH 覆盖
+  profile: ${UPLOAD_PATH:/opt/JonLink/uploadPath}
   # 获取ip地址开关
   addressEnabled: false
   # 验证码类型 math 数字计算 char 字符验证
@@ -97,7 +98,7 @@ token:
   # 令牌自定义标识
   header: Authorization
   # 令牌密钥
-  secret: abcdefghijklmnopqrstuvwxyz
+  secret: ${JWT_SECRET:YqV2c8TkP4nHbW7XmZ3eL6sJ9uR1vN5dA0gF8iD3oB2hC4kE6}
   # 令牌有效期（默认30分钟）
   expireTime: 30
 
@@ -145,3 +146,39 @@ xss:
   excludes: /system/notice
   # 匹配链接
   urlPatterns: /system/*,/monitor/*,/tool/*
+
+# 公众号配置
+wx:
+  # AES 密钥(Base64,16/24/32 字节);真生产必须用环境变量 WX_AES_KEY 覆盖,默认值仅为本地占位
+  aes:
+    key: ${WX_AES_KEY:CRJcY+YUEO8qfQY8agmnqw==}
+  # OAuth 回调基础地址(需配置为公网可访问的域名/IP, 生产环境建议使用 HTTPS 域名)
+  oauth:
+    callback-base: http://115.190.215.93/wx/oauth/callback
+  # 回调验签配置
+  callback:
+    # 是否允许未配置 token 时 mock 放行(生产环境建议关闭)
+    allow-mock: ${WX_CALLBACK_ALLOW_MOCK:false}
+
+# 企业微信配置
+wecom:
+  # 企业ID
+  corp-id: 
+  # 应用AgentId
+  agent-id: 
+  # 应用Secret
+  secret: 
+  # 回调Token
+  token: 
+  # 回调AES密钥(43字节Base64)
+  aes-key: 
+  # 通讯录同步配置
+  sync:
+    # 是否开启自动同步（每日凌晨1点）
+    enabled: false
+  # 登录授权配置
+  auth:
+    # 是否启免登
+    enabled: false
+    # 授权后重定向地址
+    redirect-uri: 

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonlink.system.mapper.FinTaxMapper">
+
+    <!-- 进项税: 期间内科目编码2221(应交增值税)借方发生额合计 -->
+    <select id="sumInputTaxByPeriod" parameterType="String" resultType="java.util.LinkedHashMap">
+        SELECT
+            IFNULL(SUM(ve.debit_amount), 0) AS totalDebit,
+            IFNULL(SUM(ve.credit_amount), 0) AS totalCredit
+        FROM fin_voucher_entry ve
+        LEFT JOIN fin_voucher v ON ve.voucher_id = v.id
+        LEFT JOIN fin_subject s ON ve.subject_id = s.id
+        WHERE v.period_code = #{periodCode}
+          AND s.subject_code LIKE '2221%'
+          AND v.status != '3'
+    </select>
+
+    <!-- 销项税: 期间内科目编码2221(应交增值税)贷方发生额合计 -->
+    <select id="sumOutputTaxByPeriod" parameterType="String" resultType="java.util.LinkedHashMap">
+        SELECT
+            IFNULL(SUM(ve.debit_amount), 0) AS totalDebit,
+            IFNULL(SUM(ve.credit_amount), 0) AS totalCredit
+        FROM fin_voucher_entry ve
+        LEFT JOIN fin_voucher v ON ve.voucher_id = v.id
+        LEFT JOIN fin_subject s ON ve.subject_id = s.id
+        WHERE v.period_code = #{periodCode}
+          AND s.subject_code LIKE '2221%'
+          AND v.status != '3'
+    </select>
+
+    <!-- 收入合计: 期间内损益类收入科目(贷方余额科目)贷方发生额 -->
+    <select id="sumIncomeByPeriod" parameterType="String" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM(ve.credit_amount) - SUM(ve.debit_amount), 0)
+        FROM fin_voucher_entry ve
+        LEFT JOIN fin_voucher v ON ve.voucher_id = v.id
+        LEFT JOIN fin_subject s ON ve.subject_id = s.id
+        WHERE v.period_code = #{periodCode}
+          AND s.subject_type = '5'
+          AND s.balance_direction = '1'
+          AND v.status != '3'
+    </select>
+
+    <!-- 费用合计: 期间内损益类费用科目(借方余额科目)借方发生额 -->
+    <select id="sumExpenseByPeriod" parameterType="String" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM(ve.debit_amount) - SUM(ve.credit_amount), 0)
+        FROM fin_voucher_entry ve
+        LEFT JOIN fin_voucher v ON ve.voucher_id = v.id
+        LEFT JOIN fin_subject s ON ve.subject_id = s.id
+        WHERE v.period_code = #{periodCode}
+          AND s.subject_type = '5'
+          AND s.balance_direction = '0'
+          AND v.status != '3'
+    </select>
+
+</mapper>

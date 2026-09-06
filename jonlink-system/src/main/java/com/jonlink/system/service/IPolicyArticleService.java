@@ -5,52 +5,59 @@ import com.jonlink.system.domain.PolicyArticle;
 import com.jonlink.system.domain.PolicyArticleVersion;
 
 /**
- * 政策文章 Service 接口
+ * 政策文章Service接口
  *
  * @author jonlink
- * @date 2026-08-22
  */
 public interface IPolicyArticleService
 {
-    /** 条件分页 */
-    public List<PolicyArticle> selectPolicyArticleList(PolicyArticle article);
-
-    /** 单条 */
+    /**
+     * 查询政策文章
+     */
     public PolicyArticle selectPolicyArticleById(Long id);
 
-    /** 按分类查当前版(展示端) */
+    /**
+     * 查询政策文章列表
+     */
+    public List<PolicyArticle> selectPolicyArticleList(PolicyArticle policyArticle);
+
+    /**
+     * 查询分类下的当前政策
+     */
     public PolicyArticle selectCurrentByCategoryId(Long categoryId);
 
-    /** 浏览 +1 */
-    public void incrementViewCount(Long id);
+    /**
+     * 新增政策文章
+     */
+    public int insertPolicyArticle(PolicyArticle policyArticle);
 
     /**
-     * 新增政策
-     * 自动设置 version_no=1
+     * 修改政策文章（自动保存旧版本到历史）
      */
-    public int insertPolicyArticle(PolicyArticle article);
+    public int updatePolicyArticle(PolicyArticle policyArticle);
 
     /**
-     * 修改政策
-     * 如果 pics 或 title 变化,自动将"修改前的当前版"快照到 policy_article_version
+     * 批量删除政策文章
      */
-    public int updatePolicyArticle(PolicyArticle article);
-
-    /** 单删 */
-    public int deletePolicyArticleById(Long id);
-
-    /** 批删 */
     public int deletePolicyArticleByIds(Long[] ids);
 
-    /** 历史版本(倒序) */
+    /**
+     * 删除政策文章信息
+     */
+    public int deletePolicyArticleById(Long id);
+
+    /**
+     * 查询历史版本列表
+     */
     public List<PolicyArticleVersion> selectVersionListByArticleId(Long articleId);
 
-    /** 取一条历史版本 */
+    /**
+     * 查询历史版本详情
+     */
     public PolicyArticleVersion selectVersionById(Long id);
 
     /**
-     * 恢复到指定历史版本
-     * 实现:把当前版快照,再用历史版本字段覆盖当前版,version_no 自增
+     * 恢复历史版本（用历史版本覆盖当前）
      */
     public int restoreVersion(Long versionId);
 }

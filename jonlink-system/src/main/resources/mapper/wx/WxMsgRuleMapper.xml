@@ -20,10 +20,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="updateBy"    column="update_by"    />
         <result property="updateTime"    column="update_time"    />
         <result property="remark"    column="remark"    />
+        <result property="templateTitle"    column="template_title"    />
     </resultMap>
 
     <sql id="selectWxMsgRuleVo">
-        select id, rule_code, rule_name, biz_type, template_id, content_rule, url_rule, audience_rule, enabled, sort_order, create_by, create_time, update_by, update_time, remark from wx_msg_rule
+        select r.id, r.rule_code, r.rule_name, r.biz_type, r.template_id, r.content_rule, r.url_rule, r.audience_rule, r.enabled, r.sort_order, r.create_by, r.create_time, r.update_by, r.update_time, r.remark,
+               t.title as template_title
+        from wx_msg_rule r
+        left join wx_mp_template t on r.template_id = t.id
     </sql>
 
     <select id="selectWxMsgRuleList" parameterType="WxMsgRule" resultMap="WxMsgRuleResult">
@@ -37,7 +41,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     
     <select id="selectWxMsgRuleById" parameterType="Long" resultMap="WxMsgRuleResult">
         <include refid="selectWxMsgRuleVo"/>
-        where id = #{id}
+        where r.id = #{id}
     </select>
 
     <insert id="insertWxMsgRule" parameterType="WxMsgRule" useGeneratedKeys="true" keyProperty="id">

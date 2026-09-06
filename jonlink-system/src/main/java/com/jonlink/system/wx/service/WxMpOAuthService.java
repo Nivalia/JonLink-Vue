@@ -43,6 +43,8 @@ public class WxMpOAuthService
     private WxMpAccountMapper wxMpAccountMapper;
     @Autowired
     private WxMpUserMapper wxMpUserMapper;
+    @org.springframework.beans.factory.annotation.Value("${wx.oauth.callback-base:http://115.190.215.93/wx/oauth/callback}")
+    private String callbackBase;
 
     private WxMpAccount getAccount() {
         WxMpAccount q = new WxMpAccount();
@@ -79,9 +81,12 @@ public class WxMpOAuthService
         WxMpAccount acc = getAccount();
         String s = StringUtils.isEmpty(scope) ? "snsapi_base" : scope;
         String st = StringUtils.isEmpty(state) ? UUID.randomUUID().toString().substring(0, 8) : state;
+        // OAuth redirect_uri 必须指向后端 callback，callback 处理完再跳转到业务页面
+        String callbackUrl = callbackBase + "?redirectUri=" + urlEnc(redirectUri);
+        if (StringUtils.isNotEmpty(state)) callbackUrl += "&state=" + urlEnc(st);
         return AUTH_URL
                 + "?appid=" + acc.getAppId()
-                + "&redirect_uri=" + urlEnc(redirectUri)
+                + "&redirect_uri=" + urlEnc(callbackUrl)
                 + "&response_type=code"
                 + "&scope=" + s
                 + "&state=" + urlEnc(st)
@@ -103,9 +108,10 @@ public class WxMpOAuthService
             throw new IllegalArgumentException("未配置公众号或 code 缺失");
         } else {
             WxMpAccount acc = getAccount();
+            String appSecret = com.jonlink.common.utils.security.AesUtils.decrypt(acc.getAppSecret());
             String url = TOKEN_URL
                     + "?appid=" + acc.getAppId()
-                    + "&secret=" + acc.getAppSecret()
+                    + "&secret=" + appSecret
                     + "&code=" + code
                     + "&grant_type=authorization_code";
             String resp = HttpUtils.sendGet(url);
@@ -141,6 +147,7 @@ public class WxMpOAuthService
         out.put("openid", user.getOpenid());
         out.put("nickname", user.getNickname());
         out.put("avatar", user.getAvatar());
+        out.put("phone", user.getPhone());
         out.put("city", user.getCity());
         out.put("province", user.getProvince());
         out.put("sex", user.getSex());
@@ -191,8 +198,10 @@ public class WxMpOAuthService
             u.setSubscribeTime(new java.util.Date());
             u.setActivityLevel("3");
             u.setCreateBy("wx-oauth");
+            log.info("[wx-oauth] upsert insert openid={}, nickname={}", openid, u.getNickname());
             wxMpUserMapper.insertWxMpUser(u);
         } else {
+            log.info("[wx-oauth] upsert update id={}, openid={}, nickname={}", u.getId(), openid, u.getNickname());
             wxMpUserMapper.updateWxMpUser(u);
         }
         return u;
